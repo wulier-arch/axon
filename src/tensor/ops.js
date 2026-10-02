@@ -4,8 +4,7 @@ import { Tensor, numElements } from "./tensor.js";
  * 判断这次运算是否需要建计算图。
  *
  * 除了叶子变量（requiresGrad），已经建过图的中间张量也要算进来。
- * 否则 sub(a,b) 这类由中间节点参与的组合运算会丢失反向链，
- * 表现为「结果对，但某个输入的梯度是 null」。
+ * 否则 sub(a,b) 这类由中间节点参与的组合运算会丢失反向链。
  */
 export function track(...tensors) {
   return tensors.some((t) => t.isGraphNode());
@@ -53,7 +52,7 @@ export function add(a, b) {
     out._prev = [a, b];
     out._op = "add";
     out._backward = () => {
-      if (a.requiresGrad) {
+      if (a.isGraphNode()) {
         const ga = new Float64Array(a.size);
         for (let i = 0; i < outSize; i++) {
           const ai = aScalar ? 0 : (a.size === outSize ? i : broadcastIndex(outShape, a.shape, i, a.shape.length));
@@ -61,7 +60,7 @@ export function add(a, b) {
         }
         a.accumulateGrad(ga);
       }
-      if (b.requiresGrad) {
+      if (b.isGraphNode()) {
         const gb = new Float64Array(b.size);
         for (let i = 0; i < outSize; i++) {
           const bi = bScalar ? 0 : (b.size === outSize ? i : broadcastIndex(outShape, b.shape, i, b.shape.length));
@@ -86,12 +85,12 @@ export function mul(a, b) {
     out._prev = [a, b];
     out._op = "mul";
     out._backward = () => {
-      if (a.requiresGrad) {
+      if (a.isGraphNode()) {
         const g = new Float64Array(a.size);
         for (let i = 0; i < g.length; i++) g[i] = out.grad[i] * b.data[i];
         a.accumulateGrad(g);
       }
-      if (b.requiresGrad) {
+      if (b.isGraphNode()) {
         const g = new Float64Array(b.size);
         for (let i = 0; i < g.length; i++) g[i] = out.grad[i] * a.data[i];
         b.accumulateGrad(g);
@@ -105,7 +104,7 @@ export function mul(a, b) {
 export function scale(a, factor) {
   const out = new Tensor(new Float64Array(a.size), a.shape);
   for (let i = 0; i < out.size; i++) out.data[i] = a.data[i] * factor;
-  if (a.requiresGrad) {
+  if (a.isGraphNode()) {
     out._prev = [a];
     out._op = "scale";
     out._backward = () => {
@@ -145,7 +144,7 @@ function matmul2d(a, b) {
     out._prev = [a, b];
     out._op = "matmul";
     out._backward = () => {
-      if (a.requiresGrad) {
+      if (a.isGraphNode()) {
         const ga = new Float64Array(m * k);
         for (let i = 0; i < m; i++) {
           const rowO = i * n, rowA = i * k;
@@ -157,14 +156,17 @@ function matmul2d(a, b) {
         }
         a.accumulateGrad(ga);
       }
-      if (b.requiresGrad) {
+      if (b.isGraphNode()) {
         const gb = new Float64Array(k * n);
+        // dL/db[p][j] = Σ_i out.grad[i][j] · a[i][p]
+        // 必须对所有输出列 j 累加：只取 j=0 会丢掉其余列的贡献
         for (let p = 0; p < k; p++) {
           const rowB = p * n;
           for (let i = 0; i < m; i++) {
-            const g = out.grad[i * n];
-            if (g === 0) continue;
-            for (let j = 0; j < n; j++) gb[rowB + j] += g * a.data[i * k + p];
+            const av = a.data[i * k + p];
+            if (av === 0) continue;
+            const rowO = i * n;
+            for (let j = 0; j < n; j++) gb[rowB + j] += out.grad[rowO + j] * av;
           }
         }
         b.accumulateGrad(gb);
@@ -199,7 +201,7 @@ function matmul3d(a, b) {
     out._prev = [a, b];
     out._op = "matmul_batch";
     out._backward = () => {
-      if (a.requiresGrad) {
+      if (a.isGraphNode()) {
         const ga = new Float64Array(B * m * k);
         for (let bi = 0; bi < B; bi++) {
           const aOff = bi * m * k, bOff = bi * k * n, oOff = bi * m * n;
@@ -213,15 +215,16 @@ function matmul3d(a, b) {
         }
         a.accumulateGrad(ga);
       }
-      if (b.requiresGrad) {
+      if (b.isGraphNode()) {
         const gb = new Float64Array(B * k * n);
         for (let bi = 0; bi < B; bi++) {
           const aOff = bi * m * k, bOff = bi * k * n, oOff = bi * m * n;
           for (let p = 0; p < k; p++) {
             for (let i = 0; i < m; i++) {
-              const g = out.grad[oOff + i * n];
-              if (g === 0) continue;
-              for (let j = 0; j < n; j++) gb[bOff + p * n + j] += g * a.data[aOff + i * k + p];
+              const av = a.data[aOff + i * k + p];
+              if (av === 0) continue;
+              const rowO = oOff + i * n;
+              for (let j = 0; j < n; j++) gb[bOff + p * n + j] += out.grad[rowO + j] * av;
             }
           }
         }
@@ -240,7 +243,7 @@ export function sub(a, b) {
 export function unary(a, fn, dfn, name) {
   const out = new Tensor(new Float64Array(a.size), a.shape);
   for (let i = 0; i < a.size; i++) out.data[i] = fn(a.data[i]);
-  if (a.requiresGrad) {
+  if (a.isGraphNode()) {
     out._prev = [a];
     out._op = name;
     out._backward = () => {
@@ -279,7 +282,7 @@ export function softmax(a) {
     for (let j = 0; j < last; j++) out.data[off + j] /= sum;
   }
 
-  if (a.requiresGrad) {
+  if (a.isGraphNode()) {
     out._prev = [a];
     out._op = "softmax";
     out._backward = () => {
@@ -303,7 +306,7 @@ export function sum(a, dim = -1) {
     let s = 0;
     for (let i = 0; i < a.size; i++) s += a.data[i];
     const out = new Tensor([s], [1]);
-    if (a.requiresGrad) {
+    if (a.isGraphNode()) {
       out._prev = [a];
       out._op = "sum_all";
       out._backward = () => {
@@ -334,7 +337,7 @@ export function sum(a, dim = -1) {
     }
   }
 
-  if (a.requiresGrad) {
+  if (a.isGraphNode()) {
     out._prev = [a, dim];
     out._op = "sum_dim";
     out._backward = () => {
@@ -364,7 +367,7 @@ export function reshape(a, shape) {
     throw new Error(`reshape: 元素数不匹配 ${a.size} -> [${shape}]`);
   }
   const out = new Tensor(Float64Array.from(a.data), shape);
-  if (a.requiresGrad) {
+  if (a.isGraphNode()) {
     out._prev = [a];
     out._op = "reshape";
     out._backward = () => a.accumulateGrad(out.grad);
@@ -379,7 +382,7 @@ export function transpose(a) {
   const out = new Tensor(new Float64Array(a.size), [n, m]);
   for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) out.data[j * m + i] = a.data[i * n + j];
 
-  if (a.requiresGrad) {
+  if (a.isGraphNode()) {
     out._prev = [a];
     out._op = "transpose";
     out._backward = () => {
@@ -399,12 +402,12 @@ export function div(a, b) {
     out._prev = [a, b];
     out._op = "div";
     out._backward = () => {
-      if (a.requiresGrad) {
+      if (a.isGraphNode()) {
         const g = new Float64Array(a.size);
         for (let i = 0; i < g.length; i++) g[i] = out.grad[i] / b.data[i];
         a.accumulateGrad(g);
       }
-      if (b.requiresGrad) {
+      if (b.isGraphNode()) {
         const g = new Float64Array(b.size);
         for (let i = 0; i < g.length; i++) {
           g[i] = (-out.grad[i] * a.data[i]) / (b.data[i] * b.data[i]);

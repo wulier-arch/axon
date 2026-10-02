@@ -9,4 +9,6 @@ export { conv2d, maxPool2d, avgPool2d } from "./tensor/conv.js";
 
 export { Tensor, numElements, swap } from "./tensor/tensor.js";
 export { backward, backward2, collectLeaves, zeroGrad } from "./autodiff.js";
-export { numericalGradient, checkGradient } from "./gradient-check.js";
+export {
+  numericalGradient, highOrderGradient, checkGradient,
+} from "./gradient-check.js";

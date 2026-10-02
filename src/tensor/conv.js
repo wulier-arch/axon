@@ -79,7 +79,7 @@ export function conv2d(x, w, b = null, stride = 1, padding = 0) {
     out._backward = () => {
       const meta = out._prev[7];
 
-      if (w.requiresGrad) {
+      if (w.isGraphNode()) {
         const dw = new Float64Array(w.size);
         for (let oc = 0; oc < OC; oc++) {
           for (let p = 0; p < meta.patchSize; p++) {
@@ -101,7 +101,7 @@ export function conv2d(x, w, b = null, stride = 1, padding = 0) {
         b.accumulateGrad(db);
       }
 
-      if (x.requiresGrad) {
+      if (x.isGraphNode()) {
         const dx = new Float64Array(x.size);
         for (let q = 0; q < outSpatial; q++) {
           const oh = (q / meta.outW) | 0, ow = q % meta.outW;
@@ -156,7 +156,7 @@ export function maxPool2d(x, kernel = 2, stride = null) {
     }
   }
 
-  if (x.requiresGrad) {
+  if (x.isGraphNode()) {
     out._prev = [x, argmaxPos];
     out._op = "maxPool2d";
     out._backward = () => {
@@ -188,7 +188,7 @@ export function avgPool2d(x, kernel = 2, stride = null) {
     }
   }
 
-  if (x.requiresGrad) {
+  if (x.isGraphNode()) {
     out._prev = [x, kernel, s];
     out._op = "avgPool2d";
     out._backward = () => {

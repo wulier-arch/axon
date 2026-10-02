@@ -19,8 +19,15 @@ function seeded(seed = 42) {
   };
 }
 
-/** 断言解析梯度与数值梯度一致 */
+/**
+ * 断言解析梯度与数值梯度一致。
+ *
+ * 必须先清空梯度：上一次 backward 的累加结果还留在 .grad 里，
+ * 而数值梯度是按当前参数算的，两者混在一起必然对不上。
+ */
 function assertGradientClose(lossFn, inputs, label, tol = 1e-5) {
+  for (const t of inputs) t.zeroGrad();
+  backward(lossFn());
   const r = checkGradient(lossFn, inputs, { tol });
   assert.ok(
     r.passed,
@@ -154,11 +161,11 @@ describe("matmul 梯度", () => {
   });
 
   it("2D 梯度校验", () => {
-    const r = seeded(7);
-    const a = Tensor.variable([r(), r(), r(), r(), r(), r()], [2, 3]);
-    const b = Tensor.variable([r(), r(), r(), r(), r(), r()], [3, 2]);
+    // 用确定性的有理数，避免伪随机数经 matmul 后量级放大、
+    // 让有限差分的舍入误差变得可见
+    const a = Tensor.variable([1, 2, 3, 0.5, -1, 2], [2, 3]);
+    const b = Tensor.variable([0.5, -1, 2, 3, 1, -2], [3, 2]);
     const loss = () => mul(matmul(a, b), Tensor.tensor([1, 2, 3, 4], [2, 2])).sum();
-    backward(loss());
     assertGradientClose(loss, [a, b], "matmul 2D");
   });
 
@@ -172,7 +179,11 @@ describe("matmul 梯度", () => {
   });
 
   it("内维不匹配时报错", () => {
-    assert.throws(() => matmul(Tensor.tensor([1, 2], [1, 2]), Tensor.tensor([1], [3, 1])), /内维不匹配/);
+    // a 是 [1,3]，b 是 [2,1]，内维 3≠2
+    assert.throws(
+      () => matmul(Tensor.tensor([1, 2, 3], [1, 3]), Tensor.tensor([1, 2], [2, 1])),
+      /内维不匹配/
+    );
   });
 
   it("批次维度必须相等", () => {

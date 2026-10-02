@@ -14,7 +14,7 @@ export function gatherRows(a, indices) {
   for (let i = 0; i < indices.length; i++) {
     for (let j = 0; j < n; j++) out.data[i * n + j] = a.data[indices[i] * n + j];
   }
-  if (a.requiresGrad) {
+  if (a.isGraphNode()) {
     out._prev = [a, indices];
     out._op = "gatherRows";
     out._backward = () => {
@@ -56,7 +56,7 @@ export function concat(list, axis = 0) {
     out._backward = () => {
       let b2 = 0;
       for (const t of list) {
-        if (t.requiresGrad) {
+        if (t.isGraphNode()) {
           const seg = t.shape[0];
           t.accumulateGrad(out.grad.slice(b2 * inner, (b2 + seg) * inner));
         }
