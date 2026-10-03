@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>axon demo · 螺旋分类</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: ui-sans-serif, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: #0d0d16;
+        color: #ece8f7;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { padding: 28px 20px 48px; }
+
+      .wrap { max-width: 940px; margin: 0 auto; }
+
+      header { margin-bottom: 22px; }
+      h1 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
+      .sub { margin-top: 6px; color: #9d96b8; font-size: 14px; }
+      .sub code { background: #ffffff12; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+
+      .stage {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 18px;
+        align-items: start;
+      }
+      @media (max-width: 760px) { .stage { grid-template-columns: 1fr; } }
+
+      canvas {
+        width: 100%;
+        border-radius: 14px;
+        background: #14141f;
+        border: 1px solid #ffffff14;
+        display: block;
+      }
+
+      .panel {
+        background: #14141f;
+        border: 1px solid #ffffff14;
+        border-radius: 14px;
+        padding: 16px;
+      }
+
+      .stat { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; }
+      .stat span:first-child { color: #9d96b8; }
+      .stat span:last-child { font-variant-numeric: tabular-nums; font-weight: 700; }
+
+      .bar {
+        height: 6px;
+        border-radius: 3px;
+        background: #ffffff10;
+        overflow: hidden;
+        margin: 10px 0 4px;
+      }
+      .bar > i { display: block; height: 100%; background: linear-gradient(90deg, #7c5cff, #4ad6c8); transition: width .1s linear; }
+
+      .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+
+      button {
+        padding: 9px 16px;
+        border-radius: 9px;
+        border: 1px solid #ffffff20;
+        background: #ffffff0d;
+        color: #ece8f7;
+        font: inherit;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background .15s ease;
+      }
+      button:hover:not(:disabled) { background: #ffffff1a; }
+      button:disabled { opacity: .4; cursor: not-allowed; }
+      button.primary { background: #7c5cff; border-color: #7c5cff; color: #fff; }
+      button.primary:hover:not(:disabled) { background: #8d70ff; }
+
+      .note {
+        margin-top: 20px;
+        padding: 12px 14px;
+        border-left: 2px solid #7c5cff;
+        background: #ffffff06;
+        border-radius: 0 8px 8px 0;
+        font-size: 13px;
+        line-height: 1.65;
+        color: #b9b2d0;
+      }
+      .note b { color: #ece8f7; }
+
+      .legend { display: flex; gap: 16px; font-size: 12px; color: #9d96b8; margin-top: 10px; }
+      .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <h1>axon · 螺旋分类</h1>
+        <p class="sub">
+          零依赖神经网络框架在浏览器里实时训练。两层 ReLU 网络，看决策边界如何从混乱收敛到清晰。
+          全部计算来自 <code>../src/</code>，无任何外部依赖。
+        </p>
+      </header>
+
+      <div class="stage">
+        <div>
+          <canvas id="view" width="600" height="600"></canvas>
+          <div class="legend">
+            <span><i class="dot" style="background:#ff6b8b"></i>类别 A</span>
+            <span><i class="dot" style="background:#4ad6c8"></i>类别 B</span>
+            <span><i class="dot" style="background:#ffffff40"></i>正确</span>
+            <span><i class="dot" style="background:#ff3b3b"></i>误分类</span>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="stat"><span>训练轮次</span><span id="epoch">0</span></div>
+          <div class="stat"><span>损失</span><span id="loss">—</span></div>
+          <div class="stat"><span>准确率</span><span id="acc">—</span></div>
+          <div class="stat"><span>速度</span><span id="speed">—</span></div>
+          <div class="stat"><span>参数量</span><span id="params">—</span></div>
+
+          <div class="bar"><i id="bar" style="width:0%"></i></div>
+
+          <div class="controls">
+            <button id="start" class="primary">开始训练</button>
+            <button id="pause" disabled>暂停</button>
+            <button id="reset">重置</button>
+          </div>
+        </div>
+      </div>
+
+      <p class="note">
+        <b>你在看什么：</b>背景色是网络当前输出的决策区域，随训练推进从斑驳逐渐变干净。
+        螺旋数据集无法用一条直线分开，必须靠非线性层才能学会——如果这里的网络只有一层，
+        准确率会卡在 50% 左右。
+      </p>
+    </div>
+
+    <script type="module" src="./spiral.js"></script>
+  </body>
+</html>

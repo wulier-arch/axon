@@ -5,7 +5,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-a48aff.svg)](LICENSE)
 [![CI](https://github.com/wulier-arch/axon/actions/workflows/ci.yml/badge.svg)](https://github.com/wulier-arch/axon/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-57%20passed-4ec9a0.svg)](test/)
+[![tests](https://img.shields.io/badge/tests-60%20passed-4ec9a0.svg)](test/)
 [![dependencies](https://img.shields.io/badge/dependencies-0-ff6b6b.svg)](package.json)
 [![node](https://img.shields.io/badge/node-%3E%3D18-5cb85c.svg)](package.json)
 
@@ -13,6 +13,14 @@
 XOR          100.0% 准确率      高斯簇       100.0% 准确率
 螺旋数据集    100.0% 准确率      线性回归     w=2.511（真值 2.5）
 ```
+
+## 在线 Demo
+
+**[▶ 螺旋分类实时训练](https://wulier-arch.github.io/axon/demo/)**
+
+在浏览器里看神经网络学习：两层 ReLU 网络处理螺旋数据集，决策边界随着训练推进
+从斑驳逐渐变干净。**整个 demo 没有打包步骤**——它直接 `import` 了 `src/` 里的
+框架源码，这在浏览器里就能跑，本身就是零依赖设计目标的证明。
 
 ## 为什么做这个
 
@@ -121,7 +129,7 @@ XOR (4 样本)              100.0%      0.0002          6ms
 | 数据集 | `makeSpiral` `makeBlobs` `makeXor` `makeLinearRegression` |
 | 验证 | `checkGradient` `numericalGradient` `highOrderGradient` |
 
-共 **51 个导出**，**57 个测试**。
+共 **51 个导出**，**60 个测试**。
 
 ## 设计要点
 
@@ -161,11 +169,20 @@ if (!r.passed) throw new Error(r.report);
 ```bash
 git clone https://github.com/wulier-arch/axon.git
 cd axon
-npm test          # 57 个用例，无需 npm install
+npm test          # 60 个用例，无需 npm install
 npm run benchmark
 ```
 
 本项目零依赖，用 Node 内置的 `node:test` 而非 Jest。
+
+### 本地跑 demo
+
+demo 用了 ES Module，需要经 HTTP 打开（`file://` 会被 CORS 拦截）：
+
+```bash
+python3 -m http.server 8000
+# 访问 http://localhost:8000/demo/
+```
 
 ## 路线图
 
