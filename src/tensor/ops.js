@@ -28,11 +28,36 @@ function broadcastIndex(outShape, inShape, outFlat, inShapeLen) {
 }
 
 /** 加法，支持标量广播与同形状 */
+/**
+ * 计算两个形状的广播结果，不兼容时返回 null。
+ * numpy 规则：从最后一维开始逐维比较，要么相等，要么其中一方为 1。
+ */
+function resolveBroadcast(shapeA, shapeB) {
+  const rank = Math.max(shapeA.length, shapeB.length);
+  const out = new Array(rank);
+
+  for (let i = 0; i < rank; i++) {
+    // 缺失的维度视为 1
+    const a = shapeA[shapeA.length - rank + i] ?? 1;
+    const b = shapeB[shapeB.length - rank + i] ?? 1;
+    if (a === b) out[i] = a;
+    else if (a === 1) out[i] = b;
+    else if (b === 1) out[i] = a;
+    else return null;
+  }
+  return out;
+}
+
+/**
+ * 广播加法。
+ *
+ * 支持三类情形（按 numpy 右对齐规则）：
+ *   1. 标量广播：[n] + [1]
+ *   2. 按行广播：[m,n] + [n]  ← 全连接层加偏置的常规用法
+ *   3. 同形状   ：[m,n] + [m,n]
+ */
 export function add(a, b) {
-  const outShape = a.shape.length === 1 && a.shape[0] === 1 && b.ndim > 0
-    ? b.shape
-    : (b.shape.length === 1 && b.shape[0] === 1 && a.ndim > 0 ? a.shape
-      : (a.size === b.size ? a.shape : null));
+  const outShape = resolveBroadcast(a.shape, b.shape);
   if (!outShape) {
     throw new Error(`add: 形状不兼容 [${a.shape}] + [${b.shape}]`);
   }

@@ -14,7 +14,8 @@
   ],
   "scripts": {
     "test": "node --test",
-    "test:gradients": "node --test test/gradients.test.js"
+    "test:gradients": "node --test test/gradients.test.js",
+    "benchmark": "node benchmark/run.js"
   },
   "keywords": [
     "neural-network",
