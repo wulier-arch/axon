@@ -28,13 +28,20 @@ axon 想做的是另一件事：**把这件事摊开给你看**。
 ## 快速开始
 
 ```bash
-npm install axon
+npm install axon-net
+```
+
+也可以不用安装，直接克隆——本项目零依赖，`src/` 就是全部：
+
+```bash
+git clone https://github.com/wulier-arch/axon.git
+cd axon && npm test
 ```
 
 训练一个神经网络，**11 行**：
 
 ```js
-import { Linear, Sequential, Adam, Trainer, crossEntropy, accuracy, makeSpiral } from "axon";
+import { Linear, Sequential, Adam, Trainer, crossEntropy, accuracy, makeSpiral } from "axon-net";
 
 const { x, y } = makeSpiral({ samples: 300 });     // 程序生成的数据集
 
@@ -62,7 +69,7 @@ console.log(trainer.history.at(-1));
 自己实现反向传播，**7 行**：
 
 ```js
-import { Tensor, mul, backward, checkGradient } from "axon";
+import { Tensor, mul, backward, checkGradient } from "axon-net";
 
 const x = Tensor.variable([2, 3], [2]);
 backward(mul(x, x).sum());

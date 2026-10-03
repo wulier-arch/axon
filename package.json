@@ -1,5 +1,5 @@
 {
-  "name": "axon",
+  "name": "axon-net",
   "version": "0.2.0",
   "description": "零依赖的神经网络框架：自动微分、张量、卷积、层、优化器与训练循环全部手写。浏览器与 Node.js 双端可跑，每个算子都有有限差分梯度校验。",
   "type": "module",

@@ -15,12 +15,16 @@ export class SGD {
   }
 
   step(params, grads) {
+    // 动量缓冲区必须逐参数按各自尺寸分配：
+    // 权重 [in,out] 与偏置 [out] 的元素数不同，
+    // 统一按 params[0].size 分配会让偏置缓冲区越界或过短，
+    // 越界写入在 Float64Array 上是静默的，训练会悄悄学错。
     if (!this.velocity) {
-      this.velocity = params.map(() => new Float64Array(params[0]?.size ?? 0));
+      this.velocity = params.map((p) => new Float64Array(p.size));
     }
     for (let i = 0; i < params.length; i++) {
       const p = params[i], g = grads[i];
-      if (!g) continue;
+      if (!g || this.velocity[i].length !== p.size) continue;
       for (let j = 0; j < p.size; j++) {
         this.velocity[i][j] = this.momentum * this.velocity[i][j] + g[j];
         p.data[j] -= this.lr * this.velocity[i][j];
@@ -37,10 +41,11 @@ export class Momentum {
   }
 
   step(params, grads) {
+    // 同 SGD：动量缓冲区需按各参数自身尺寸分配
     if (!this.v) this.v = params.map((p) => new Float64Array(p.size));
     for (let i = 0; i < params.length; i++) {
       const p = params[i], g = grads[i];
-      if (!g) continue;
+      if (!g || this.v[i].length !== p.size) continue;
       for (let j = 0; j < p.size; j++) {
         this.v[i][j] = this.beta * this.v[i][j] + g[j];
         p.data[j] -= this.lr * this.v[i][j];

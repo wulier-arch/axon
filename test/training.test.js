@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
   Tensor, Linear, Sequential, Adam, AdamW, SGD, Scheduler, Trainer,
-  crossEntropy, mse, accuracy, makeSpiral, makeBlobs, makeXor,
+  crossEntropy, mse, accuracy, makeSpiral, makeBlobs, makeXor, Momentum,
   makeLinearRegression, backward, checkGradient, softmax,
 } from "../src/index.js";
 
@@ -105,6 +105,18 @@ describe("损失函数", () => {
   it("数值稳定：极大 logits 不产生 Infinity", () => {
     const loss = crossEntropy(Tensor.tensor([1000, 1000, 1000], [1, 3]), [0]);
     assert.ok(Number.isFinite(loss.data[0]), "损失出现非有限值");
+  });
+
+  it("mse 梯度可校验", () => {
+    const pred = Tensor.variable([1, 2, 3], [3]);
+    const target = Tensor.tensor([0, 0, 0], [3]);
+    const loss = () => mse(pred, target);
+    backward(loss());
+    const r = checkGradient(loss, [pred]);
+    assert.ok(r.passed, `mse 梯度不匹配: ${r.report}`);
+  });
+});
+
 describe("优化器", () => {
   it("SGD 沿负梯度方向更新", () => {
     const p = Tensor.variable([5], [1]);
@@ -125,6 +137,46 @@ describe("优化器", () => {
     const opt = new Adam({ lr: 0.1 });
     opt.step([p], [Float64Array.of(1)]);
     assert.ok(p.data[0] < -0.09, `偏差校正失效，实际 ${p.data[0]}`);
+  });
+
+  it("SGD 能处理尺寸不同的多个参数", () => {
+    // 回归用例：曾用 params[0].size 给所有参数分配动量缓冲区，
+    // 导致偏置（元素更少）缓冲区越界写入而被静默忽略，训练悄悄学错。
+    const weight = Tensor.variable([1, 1, 1, 1], [2, 2]);
+    const bias = Tensor.variable([0, 0], [2]);
+    const opt = new SGD({ lr: 0.1 });
+    opt.step(
+      [weight, bias],
+      [Float64Array.of(1, 1, 1, 1), Float64Array.of(0.5, 0.5)],
+    );
+    assert.ok(Math.abs(weight.data[0] - 0.9) < 1e-9, `权重未更新：${weight.data[0]}`);
+    // 偏置梯度为 0.5，更新量应为 0.05
+    assert.ok(Math.abs(bias.data[0] + 0.05) < 1e-9, `偏置未更新：${bias.data[0]}`);
+    assert.ok(Math.abs(bias.data[1] + 0.05) < 1e-9, `偏置未更新：${bias.data[1]}`);
+  });
+
+  it("Momentum 能处理尺寸不同的多个参数", () => {
+    const weight = Tensor.variable([1, 1, 1, 1], [2, 2]);
+    const bias = Tensor.variable([0, 0], [2]);
+    const opt = new Momentum({ lr: 0.1, beta: 0.9 });
+    opt.step(
+      [weight, bias],
+      [Float64Array.of(1, 1, 1, 1), Float64Array.of(1, 1)],
+    );
+    assert.ok(Math.abs(weight.data[0] - 0.9) < 1e-9, `权重未更新：${weight.data[0]}`);
+    assert.ok(Math.abs(bias.data[0] + 0.1) < 1e-9, `偏置未更新：${bias.data[0]}`);
+  });
+
+  it("Adam 能处理尺寸不同的多个参数", () => {
+    const weight = Tensor.variable([1, 1, 1, 1], [2, 2]);
+    const bias = Tensor.variable([0, 0], [2]);
+    const opt = new Adam({ lr: 0.1 });
+    opt.step(
+      [weight, bias],
+      [Float64Array.of(1, 1, 1, 1), Float64Array.of(1, 1)],
+    );
+    assert.ok(Math.abs(weight.data[0] - 0.9) < 1e-6, `权重未更新：${weight.data[0]}`);
+    assert.ok(Math.abs(bias.data[0] + 0.1) < 1e-6, `偏置未更新：${bias.data[0]}`);
   });
 
   it("Adam 梯度为零时不会 NaN", () => {
@@ -254,15 +306,3 @@ describe("端到端训练", () => {
     }
   });
 });
-  });
-
-  it("mse 梯度可校验", () => {
-    const pred = Tensor.variable([1, 2, 3], [3]);
-    const target = Tensor.tensor([0, 0, 0], [3]);
-    const loss = () => mse(pred, target);
-    backward(loss());
-    const r = checkGradient(loss, [pred]);
-    assert.ok(r.passed, `mse 梯度不匹配: ${r.report}`);
-  });
-});
-// __PART2__
