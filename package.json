@@ -1,0 +1,46 @@
+{
+  "name": "axon",
+  "version": "0.1.0",
+  "description": "零依赖的神经网络框架：自动微分、张量运算、卷积与注意力，浏览器和 Node 都能跑",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "test:gradients": "node --test test/gradients.test.js"
+  },
+  "keywords": [
+    "neural-network",
+    "deep-learning",
+    "autodiff",
+    "automatic-differentiation",
+    "tensor",
+    "machine-learning",
+    "zero-dependency",
+    "browser",
+    "convolution",
+    "transformer",
+    "ai"
+  ],
+  "license": "MIT",
+  "author": "wulier-arch",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wulier-arch/axon.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wulier-arch/axon/issues"
+  },
+  "homepage": "https://github.com/wulier-arch/axon#readme",
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false
+}

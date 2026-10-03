@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: 校验
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 18 是最低要求，同时覆盖仍在广泛使用的 LTS
+        node: ['18', '20', '22']
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 准备 Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: 语法检查
+        run: |
+          for f in src/*.js src/tensor/*.js test/*.js; do
+            node --check "$f"
+          done
+
+      - name: 单元测试（含梯度校验）
+        # 用自动发现而非 `node --test test/`：目录形式在较新版本上
+        # 会被当作模块路径而报 MODULE_NOT_FOUND
+        run: node --test
+
+      - name: 确认零依赖
+        run: |
+          if [ -d node_modules ]; then
+            echo "::error::本项目坚持零依赖，不应出现 node_modules"
+            exit 1
+          fi
+          deps=$(node -e "const p=require('./package.json');console.log(Object.keys(p.dependencies||{}).length)")
+          if [ "$deps" != "0" ]; then
+            echo "::error::package.json 声明了 $deps 个依赖，应为 0"
+            exit 1
+          fi
+          echo "✅ 保持零依赖"
+
+      - name: 确认关键文件已提交
+        run: |
+          for f in package.json README.md LICENSE CONTRIBUTING.md \
+                   CODE_OF_CONDUCT.md SECURITY.md CHANGELOG.md \
+                   src/index.js src/autodiff.js src/gradient-check.js \
+                   src/tensor/tensor.js src/tensor/ops.js \
+                   src/tensor/shape.js src/tensor/conv.js \
+                   test/gradients.test.js; do
+            git ls-files --error-unmatch "$f" >/dev/null 2>&1 || {
+              echo "::error::文件未纳入版本管理：$f"
+              exit 1
+            }
+          done
+          echo "✅ 关键文件均已提交"

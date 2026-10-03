@@ -1,0 +1,47 @@
+# 依赖：本项目坚持零依赖，出现 node_modules 视为异常
+node_modules/
+yarn.lock
+pnpm-lock.yaml
+
+# 构建产物
+dist/
+build/
+*.tsbuildinfo
+
+# 缓存
+.cache/
+.parcel-cache/
+.npm/
+
+# 环境与密钥 —— 切勿提交
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# 日志
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# 编辑器与 IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 系统文件
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+
+# 训练产物
+checkpoints/
+*.ckpt
+*.weights
+loss-curve.json
