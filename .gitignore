@@ -45,3 +45,6 @@ checkpoints/
 *.ckpt
 *.weights
 loss-curve.json
+
+# 传播物料：仅本地参考，不进版本库
+.promo/
