@@ -16,7 +16,7 @@ XOR          100.0% 准确率      高斯簇       100.0% 准确率
 
 ## 在线 Demo
 
-[![axon 训练螺旋分类数据集](docs/demo.gif)](https://wulier-arch.github.io/axon/demo/)
+[![axon 训练螺旋分类数据集](https://raw.githubusercontent.com/wulier-arch/axon/main/docs/demo.gif)](https://wulier-arch.github.io/axon/demo/)
 
 **[▶ 螺旋分类实时训练](https://wulier-arch.github.io/axon/demo/)**
 
