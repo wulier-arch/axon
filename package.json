@@ -17,7 +17,9 @@
     "test:gradients": "node --test test/gradients.test.js",
     "test:layout": "node scripts/check-test-layout.mjs",
     "check:docs": "node scripts/check-docs.mjs",
-    "benchmark": "node benchmark/run.js"
+    "benchmark": "node benchmark/run.js",
+    "example:autograd": "node examples/autograd.mjs",
+    "example:spiral": "node examples/train-spiral.mjs"
   },
   "keywords": [
     "neural-network",
