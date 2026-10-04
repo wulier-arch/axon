@@ -198,6 +198,9 @@ python3 -m http.server 8000
 浏览器端 demo（v0.2.1），`LayerNorm`、`Embedding`、`MultiHeadAttention`、
 `TransformerBlock`（v0.3.0）。
 
+当前阶段目标见 [ROADMAP.md](ROADMAP.md)，工作项见置顶的
+[v0.4.0 roadmap issue](https://github.com/wulier-arch/axon/issues/1)。
+
 - [ ] BPE 分词器
 - [ ] BatchNorm
 - [ ] 模型序列化（JSON）
