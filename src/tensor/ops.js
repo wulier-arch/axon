@@ -401,18 +401,73 @@ export function reshape(a, shape) {
 }
 
 /** 交换二维张量的两个轴 */
-export function transpose(a) {
-  if (a.ndim !== 2) throw new Error(`transpose: 仅支持 2D，得到 ${a.ndim}D`);
-  const [m, n] = a.shape;
-  const out = new Tensor(new Float64Array(a.size), [n, m]);
-  for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) out.data[j * m + i] = a.data[i * n + j];
+/**
+ * 轴置换。默认反转全部轴（等价于二维转置）；传 axes 可指定任意置换。
+ *
+ * 多头注意力需要把 [L, h, dh] 的头维提到最前或换回序列维，
+ * 二维版本做不到，所以这里推广成通用 N 维置换。
+ *
+ * 反向就是再置换一次：out = transpose(a, axes) 则
+ * grad_a = transpose(grad_out, inverse)，其中 inverse[axes[j]] = j。
+ *
+ * @param {Tensor} a
+ * @param {number[]} [axes] 长度须等于 a.ndim，且各元素为 0..ndim-1 的排列
+ */
+export function transpose(a, axes) {
+  const ndim = a.ndim;
+  if (!axes) {
+    axes = Array.from({ length: ndim }, (_, i) => ndim - 1 - i);
+  }
+  if (axes.length !== ndim) {
+    throw new Error(`transpose: axes 长度 ${axes.length} 与维度数 ${ndim} 不符`);
+  }
+  const seen = new Set(axes);
+  if (seen.size !== ndim || axes.some((x) => !Number.isInteger(x) || x < 0 || x >= ndim)) {
+    throw new Error(`transpose: axes 必须是 0..${ndim - 1} 的排列，得到 [${axes}]`);
+  }
+
+  const oldShape = a.shape;
+  const newShape = axes.map((ax) => oldShape[ax]);
+
+  // 行主序下的步长，用下标 <-> 坐标的互换
+  const stridesOf = (shape) => {
+    const s = new Array(shape.length);
+    let acc = 1;
+    for (let i = shape.length - 1; i >= 0; i--) { s[i] = acc; acc *= shape[i]; }
+    return s;
+  };
+  const oldStrides = stridesOf(oldShape);
+  const newStrides = stridesOf(newShape);
+
+  const out = new Tensor(new Float64Array(a.size), newShape);
+  for (let o = 0; o < out.size; o++) {
+    let rem = o;
+    let idx = 0;
+    for (let d = 0; d < ndim; d++) {
+      const c = Math.floor(rem / newStrides[d]);
+      rem -= c * newStrides[d];
+      idx += c * oldStrides[axes[d]];
+    }
+    out.data[o] = a.data[idx];
+  }
 
   if (a.isGraphNode()) {
+    const inverse = new Array(ndim);
+    for (let j = 0; j < ndim; j++) inverse[axes[j]] = j;
     out._prev = [a];
     out._op = "transpose";
     out._backward = () => {
       const g = new Float64Array(a.size);
-      for (let i = 0; i < m; i++) for (let j = 0; j < n; j++) g[i * n + j] = out.grad[j * m + i];
+      for (let o = 0; o < out.size; o++) {
+        let rem = o;
+        let idx = 0;
+        for (let d = 0; d < ndim; d++) {
+          const c = Math.floor(rem / newStrides[d]);
+          rem -= c * newStrides[d];
+          idx += c * oldStrides[axes[d]];
+        }
+        g[idx] += out.grad[o];
+      }
       a.accumulateGrad(g);
     };
   }

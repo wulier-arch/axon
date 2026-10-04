@@ -7,7 +7,9 @@
  */
 
 import { Tensor } from "../tensor/tensor.js";
-import { add, matmul, relu, tanh, sigmoid, softmax } from "../tensor/ops.js";
+import {
+  add, matmul, relu, tanh, sigmoid, softmax, reshape, transpose, scale,
+} from "../tensor/ops.js";
 
 /** 可复现的伪随机数发生器，保证初始化可重复 */
 export function makeRng(seed = 42) {
@@ -343,5 +345,117 @@ export class Embedding {
     };
   }
 }
+/**
+ * MultiHeadAttention：把序列的每个位置同时关注所有位置。
+ *
+ *   Q = X·W_q    K = X·W_k    V = X·W_v              [L, d]
+ *   每个头：scores = Q·Kᵀ / √d_h → softmax → ·V      [L, L]
+ *   拼接各头 → [L, d] → 再过 W_o 投影
+ *
+ * 关于 √d_h 那个除数：Q·Kᵀ 的每一项是 d_h 个乘积之和，方差随 d_h 线性增长。
+ * 不除会让 logits 随维度变大，softmax 饱和成 one-hot，梯度趋近于 0——
+ * 表现为「能跑但学不动」，且不报任何错。
+ *
+ * 实现上刻意不手写反向，而是把 matmul / transpose / reshape / softmax / add
+ * 组合起来，梯度由 tape 自动串起来。这些算子每个都单独做过有限差分校验，
+ * 组合后的正确性只需再校验一次整层的梯度即可。
+ *
+ * 头维拆分：d = h·d_h 按连续块切分，即第 i 个头占特征区间 [i·d_h, (i+1)·d_h)。
+ *
+ * @param {number} dModel 模型维度，必须能被 heads 整除
+ * @param {number} heads  头数
+ * @param {object} opts   causal：是否启用因果掩码（自回归解码时用）
+ */
+export class MultiHeadAttention {
+  constructor(dModel, heads, opts = {}) {
+    if (dModel % heads !== 0) {
+      throw new Error(`MultiHeadAttention: dModel ${dModel} 不能被头数 ${heads} 整除`);
+    }
+    this.dModel = dModel;
+    this.heads = heads;
+    this.headDim = dModel / heads;
+    this.scale = 1 / Math.sqrt(this.headDim);
+    this.causal = opts.causal ?? false;
+    this.name = "mha";
+
+    const rng = makeRng(opts.seed ?? 21);
+    // 注意力投影常用 1/√d 初始化：Q·Kᵀ 的量级才不会随维度放大
+    const std = opts.initScale ?? 1 / Math.sqrt(dModel);
+    const mk = () => {
+      const data = new Float64Array(dModel * dModel);
+      for (let i = 0; i < data.length; i++) {
+        let u = 0, v = 0;
+        while (u === 0) u = rng();
+        while (v === 0) v = rng();
+        data[i] = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v) * std;
+      }
+      return Tensor.variable(data, [dModel, dModel]);
+    };
+    this.wq = mk();
+    this.wk = mk();
+    this.wv = mk();
+    this.wo = mk();
+  }
+
+  parameters() {
+    return [this.wq, this.wk, this.wv, this.wo];
+  }
+
+  /**
+   * @param {Tensor} x 形状 [seqLen, dModel]
+   * @returns {Tensor} 形状 [seqLen, dModel]
+   */
+  forward(x) {
+    if (x.shape[1] !== this.dModel) {
+      throw new Error(
+        `MultiHeadAttention: 输入维度 ${x.shape[1]}，期望 ${this.dModel}`
+      );
+    }
+    const L = x.shape[0];
+    const h = this.heads;
+    const dh = this.headDim;
+
+    const splitHeads = (t) => transpose(reshape(t, [L, h, dh]), [1, 0, 2]);
+
+    const q = splitHeads(matmul(x, this.wq));   // [h, L, dh]
+    const k = splitHeads(matmul(x, this.wk));
+    const v = splitHeads(matmul(x, this.wv));
+
+    // [h, L, dh] @ [h, dh, L] -> [h, L, L]
+    const scores = matmul(q, transpose(k, [0, 2, 1]));
+    let logits = scale(scores, this.scale);
+
+    if (this.causal) {
+      // 用大负数而非 -Infinity：避免全行被屏蔽时 exp 出现 NaN。
+      // 位置 i 只允许关注 j ≤ i。
+      const m = new Float64Array(L * L).fill(0);
+      for (let i = 0; i < L; i++) {
+        for (let j = i + 1; j < L; j++) m[i * L + j] = -1e9;
+      }
+      logits = add(logits, Tensor.tensor(m, [1, L, L]));
+    }
+
+    const attn = softmax(logits);              // [h, L, L]
+    const ctx = matmul(attn, v);               // [h, L, dh]
+
+    // [h, L, dh] -> [L, h, dh] -> [L, d]
+    const merged = reshape(transpose(ctx, [1, 0, 2]), [L, this.dModel]);
+    return matmul(merged, this.wo);
+  }
+
+  toJSON() {
+    return {
+      type: "MultiHeadAttention",
+      dModel: this.dModel,
+      heads: this.heads,
+      causal: this.causal,
+      wq: Array.from(this.wq.data),
+      wk: Array.from(this.wk.data),
+      wv: Array.from(this.wv.data),
+      wo: Array.from(this.wo.data),
+    };
+  }
+}
+
 /** 各激活函数的前向，便于 Sequential 统一调用 */
 export const activations = { relu, tanh, sigmoid, softmax };

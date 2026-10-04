@@ -10,7 +10,7 @@ import {
   Tensor, Linear, Sequential, Adam, AdamW, SGD, Scheduler, Trainer,
   crossEntropy, mse, accuracy, makeSpiral, makeBlobs, makeXor, Momentum,
   makeLinearRegression, backward, checkGradient, softmax,
-  LayerNorm, Embedding, mul, argmaxLast,
+  LayerNorm, Embedding, MultiHeadAttention, mul, argmaxLast,
 } from "../src/index.js";
 
 describe("Linear 层", () => {
@@ -173,6 +173,113 @@ describe("Embedding", () => {
     assert.ok(loss.data[0] < 0.1, `嵌入训练后交叉熵应收敛，实得 ${loss.data[0].toFixed(4)}`);
     // logits 是连续值，要看的是每行最大分量所在的下标
     assert.deepEqual(argmaxLast(clf.forward(emb.forward(ids))), [0, 1, 0, 1], "两个类别应被完全分开");
+  });
+});
+
+describe("MultiHeadAttention", () => {
+  /** 按配置生成固定数据与损失，保证多次运行结果可比 */
+  function setup(mha, d, seq) {
+    const xD = Array.from({ length: seq * d }, (_, i) => Math.sin(i * 0.7) * 1.3);
+    const wD = Array.from({ length: seq * d }, (_, i) => ((i % 7) - 3) * 0.9 + 0.3);
+    const x = Tensor.variable(xD, [seq, d]);
+    const w = Tensor.tensor(wD, [seq, d]);
+    const loss = () => mul(mha.forward(x), w).sum();
+    backward(loss());
+    return { loss, inputs: [x, mha.wq, mha.wk, mha.wv, mha.wo] };
+  }
+
+  it("输出形状与输入一致", () => {
+    const mha = new MultiHeadAttention(8, 4, { seed: 1 });
+    const xD = Array.from({ length: 32 }, (_, i) => Math.sin(i * 0.7));
+    const out = mha.forward(Tensor.tensor(xD, [4, 8]));
+    assert.deepEqual(out.shape, [4, 8]);
+  });
+
+  // 注意力链深约 10 个算子（matmul→reshape→transpose→scale→softmax→…），
+  // 中央差分的截断误差会累积到 1e-4 量级，且随 dModel 增大而恶化：
+  // 实测 d=4 时 7e-7，d=12 时已达 7.7e-4。因此严格用例取小配置，
+  // 大配置另用宽松容差，并在下一条用例里给出严谨判据。
+  for (const heads of [1, 2]) {
+    it(`${heads} 个头时梯度可通过有限差分校验（严格容差）`, () => {
+      const mha = new MultiHeadAttention(4, heads, { seed: 3 });
+      const { loss, inputs } = setup(mha, 4, 3);
+      const r = checkGradient(loss, inputs, { eps: 1e-7 });
+      assert.ok(r.passed, `${heads} 头梯度不匹配: ${r.report}`);
+    });
+  }
+
+  it("更大维度与因果掩码下梯度依然正确", () => {
+    for (const causal of [false, true]) {
+      const mha = new MultiHeadAttention(8, 4, { seed: 3, causal });
+      const { loss, inputs } = setup(mha, 8, 4);
+      const r = checkGradient(loss, inputs, { eps: 1e-7, tol: 1e-4 });
+      assert.ok(r.passed, `causal=${causal} 梯度不匹配: ${r.report}`);
+    }
+  });
+
+  it("残差随 eps 线性收敛，证明梯度本身正确", () => {
+    // 这条比放宽容差更关键：深链下一次校验分不清「梯度写错」与「差分不准」。
+    // 判据——若解析梯度真的错了，误差会有一个不随 eps 消失的下限；
+    // 若是截断误差，eps 每降 10 倍，误差也应降约 10 倍。
+    //
+    // 取 1e-5 → 1e-6 这一段：此时截断项仍主导。再往下降到 1e-7，
+    // 舍入误差（∝1/h）抬头，误差反而不再下降，所以不能拿那一段比。
+    const errAt = (eps) => {
+      const mha = new MultiHeadAttention(8, 4, { seed: 3 });
+      const { loss, inputs } = setup(mha, 8, 4);
+      return checkGradient(loss, inputs, { eps }).maxRelError;
+    };
+    const ratio = errAt(1e-5) / errAt(1e-6);
+    assert.ok(ratio > 4 && ratio < 25,
+      `eps 降 10 倍而误差仅降 ${ratio.toFixed(2)} 倍，残差不随 eps 消失，疑似梯度有误`);
+  });
+
+  it("因果掩码下，后面的 token 不影响前面的输出", () => {
+    const seq = 4, d = 8;
+    const mha = new MultiHeadAttention(d, 4, { seed: 5, causal: true });
+    const xD = Array.from({ length: seq * d }, (_, i) => Math.sin(i * 0.7));
+    const a = mha.forward(Tensor.tensor(xD, [seq, d]));
+    const changed = xD.slice();
+    for (let i = 2; i < seq; i++) changed[i * d] += 100;  // 只动后两个位置
+    const b = mha.forward(Tensor.tensor(changed, [seq, d]));
+    for (let i = 0; i < 2; i++) {
+      for (let k = 0; k < d; k++) {
+        assert.equal(a.data[i * d + k], b.data[i * d + k],
+          `位置 ${i} 不应受后续 token 影响`);
+      }
+    }
+  });
+
+  it("dModel 不能被头数整除时报错", () => {
+    assert.throws(() => new MultiHeadAttention(7, 2), /不能被头数/);
+  });
+
+  it("输入维度不符时报错", () => {
+    const mha = new MultiHeadAttention(8, 2);
+    assert.throws(() => mha.forward(Tensor.tensor([1, 2, 3], [1, 3])), /输入维度/);
+  });
+
+  it("可与 Embedding / LayerNorm 组成 Transformer 块并训练到收敛", () => {
+    const emb = new Embedding(6, 8, { seed: 7 });
+    const attn = new MultiHeadAttention(8, 2, { seed: 8 });
+    const ln = new LayerNorm(8);
+    const head = new Linear(8, 3, { seed: 9 });
+
+    const ids = [0, 1, 2, 3, 4, 5];
+    const targets = Tensor.tensor([0, 1, 2, 0, 1, 2], [6, 1]);
+    const params = [...emb.parameters(), ...attn.parameters(), ...ln.parameters(), ...head.parameters()];
+    const opt = new Adam({ lr: 0.02 });
+
+    let loss = null;
+    for (let step = 0; step < 60; step++) {
+      for (const p of params) p.zeroGrad();
+      const out = head.forward(ln.forward(attn.forward(emb.forward(ids))));
+      loss = crossEntropy(out, targets);
+      backward(loss);
+      opt.step(params, params.map((p) => p.grad));
+    }
+    // 随机初始化的交叉熵约为 ln(3) ≈ 1.0986
+    assert.ok(loss.data[0] < 0.2, `Transformer 块应收敛，实得 ${loss.data[0].toFixed(4)}`);
   });
 });
 

@@ -5,7 +5,9 @@ export {
 
 export { gatherRows, concat, argmaxLast } from "./tensor/shape.js";
 
-export { Linear, Dropout, LayerNorm, Embedding, makeRng, activations } from "./nn/layers.js";
+export {
+  Linear, Dropout, LayerNorm, Embedding, MultiHeadAttention, makeRng, activations,
+} from "./nn/layers.js";
 export { Sequential } from "./nn/sequential.js";
 export { mse, crossEntropy, binaryCrossEntropy, accuracy } from "./loss.js";
 export { SGD, Momentum, Adam, AdamW, RMSProp, Scheduler } from "./optim/optimizers.js";

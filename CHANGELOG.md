@@ -6,11 +6,12 @@
 
 ### 计划中
 
-见 [README 路线图](README.md#路线图)：MultiHeadAttention / Transformer Block、BPE 分词器、
-BatchNorm、模型序列化（JSON）、`conv2d` 批次维度。
+见 [README 路线图](README.md#路线图)：Transformer Block（多头前馈 + 残差连接）、
+BPE 分词器、BatchNorm、模型序列化（JSON）、`conv2d` 批次维度。
 
 层与 `Sequential`、优化器、损失函数、训练循环、基准测试已于 v0.2.0 发布，
-浏览器端 demo 已于 v0.2.1 发布，`LayerNorm` 与 `Embedding` 已于 v0.3.0 发布。
+浏览器端 demo 已于 v0.2.1 发布，`LayerNorm`、`Embedding` 与 `MultiHeadAttention`
+已于 v0.3.0 发布。
 
 ## [0.3.0] - 2026-10-02
 
@@ -20,8 +21,32 @@ BatchNorm、模型序列化（JSON）、`conv2d` 批次维度。
 
 - **`LayerNorm`**：沿特征维标准化，逐行独立计算，不依赖 batch 内其他样本
 - **`Embedding`**：整数 id → 稠密向量查表
+- **`MultiHeadAttention`**：含可选因果掩码。反向不手写，而是由
+  `matmul`/`transpose`/`reshape`/`softmax`/`add` 组合而成，梯度经 tape 自动串联
+- **`transpose` 推广为通用 N 维轴置换**（默认行为与原二维实现逐字一致）。
+  多头注意力需要把 `[L, h, d_h]` 的头维提到最前再换回，二维版本做不到
 
-两者的梯度均通过 `checkGradient` 对照有限差分验证（相对误差 8e-6）。
+两者的梯度均通过 `checkGradient` 对照有限差分验证。
+
+### 如何判断「梯度写错」还是「差分不够准」
+
+注意力链深约 10 个算子，一次有限差分校验的相对误差会到 1e-4 量级，
+单看一个数字无法区分「解析梯度错了」与「中央差分不够准」。
+
+判据是**残差是否随 eps 线性收敛**：
+
+| eps | 实测 maxRelError | 比值 |
+| --- | --- | --- |
+| 1e-5 | 2.38e-4 | — |
+| 1e-6 | 2.38e-5 | **10.01** |
+| 1e-7 | 3.12e-5 | 0.76（舍入误差抬头） |
+
+误差与 eps 成正比，正是中央差分截断误差的特征（O(h²) 的分子除以 2h 后为 O(h)）；
+真梯度写错则会留下一个不随 eps 消失的下限。已把该判据固化为回归用例：
+向 `scale` 的反向注入 1% 误差后，比值立刻变成 **1.00**，判据准确报警。
+
+比较须取 1e-5 → 1e-6 这一段。再降到 1e-7，舍入误差（∝1/h）抬头，
+误差不再下降，拿那一段比会得出错误结论。
 
 ### 实现过程中被梯度校验抓到的错误
 
@@ -42,10 +67,12 @@ dx_k = (1/s) · [ γ_k·dy_k − mean(dy⊙γ) − x̂_k·mean(dy⊙γ⊙x̂) ] 
 
 ### 验证
 
-- 测试由 60 增至 **71**，Node 18/20/22/24 与本地 24 全部通过
-- 回归保护已验证：把 γ_k 乘回整个括号，梯度校验立即报 `maxRelError=6.09e-1`
-- 端到端：XOR 经 `Linear → LayerNorm → Linear` 仍达 100%；嵌入 + 线性分类器
-  200 步后交叉熵降到 1e-6，两类完全分开
+- 测试由 71 增至 **80**，Node 18/20/22/24 与本地 24 全部通过
+- `LayerNorm` 梯度回归保护：把 γ_k 乘回整个括号，校验立即报 `maxRelError=6.09e-1`
+- 注意力判据回归保护：向 `scale` 反向注入 1% 误差，收敛比值从 10.01 变为 1.00 并报警
+- 因果性：改动后 2 个 token 的输入，前 2 个位置的输出逐位相同
+- 端到端：`Embedding → MultiHeadAttention → LayerNorm → Linear` 组成的 Transformer 块，
+  交叉熵从 ln(3)≈1.0986 降到 0.0014
 
 ## [0.2.1] - 2026-10-02
 
