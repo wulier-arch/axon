@@ -56,11 +56,21 @@ export function myOp(a, b) {
 
 ## 必须通过的自检
 
+CI 会在每次 push / PR 上跑下面这些检查。它们零依赖、秒级完成，提 PR 前请在本机跑一遍：
+
 ```bash
-npm test
+npm test              # 单元测试，含每个算子的梯度校验
+npm run test:layout   # 测试文件结构自检
+npm run check:docs    # 文档事实核查
 ```
 
-测试里包含梯度校验，任何算子的梯度公式写错都会被 `checkGradient` 抓到。
+CI 另外还会跑：全部源码与示例的语法检查（`node --check`）、两个可运行示例
+（`npm run example:autograd`、`npm run example:spiral`）、零依赖校验，
+以及关键文件是否已纳入版本管理。
+
+`npm test` 里的梯度校验抓的是算子的梯度公式错误；`check:docs` 拦的是另一类
+问题——README / CHANGELOG 里的硬编码数字与说法。后者不影响测试结果，
+却最容易在改代码时被漏掉，所以同样在提交时就拦住。
 
 ## 提交规范
 
