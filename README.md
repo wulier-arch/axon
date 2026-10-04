@@ -188,12 +188,14 @@ python3 -m http.server 8000
 
 ## 路线图
 
+已完成：层与 `Sequential`、优化器、损失函数、训练循环、基准测试（v0.2.0），
+浏览器端 demo（v0.2.1）。
+
 - [ ] MultiHeadAttention / Transformer Block
 - [ ] BPE 分词器
 - [ ] Embedding / LayerNorm / BatchNorm
 - [ ] 模型序列化（JSON）
-- [ ] 浏览器端可视化 demo
-- [ ] conv2d 支持批次维度
+- [ ] `conv2d` 支持批次维度
 
 ## 参与贡献
 

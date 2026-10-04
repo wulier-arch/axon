@@ -6,7 +6,11 @@
 
 ### 计划中
 
-见 [README 路线图](../README.md#路线图)：层、优化器、损失函数、训练循环、注意力、分词器、模型序列化、浏览器 demo、benchmark。
+见 [README 路线图](README.md#路线图)：MultiHeadAttention / Transformer Block、BPE 分词器、
+Embedding / LayerNorm / BatchNorm、模型序列化（JSON）、`conv2d` 批次维度。
+
+层与 `Sequential`、优化器、损失函数、训练循环、基准测试已于 v0.2.0 发布，
+浏览器端 demo 已于 v0.2.1 发布。
 
 ## [0.2.1] - 2026-10-02
 
