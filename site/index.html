@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>axon · 零依赖神经网络框架</title>
+    <meta name="description" content="axon 是一个零依赖的 JavaScript 神经网络框架：自动微分、张量运算、卷积、层与训练循环全部手写。浏览器与 Node.js 双端可跑，每个算子都有有限差分梯度校验。">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%237c5cff'/><text x='16' y='23' font-size='19' font-family='sans-serif' font-weight='700' fill='white' text-anchor='middle'>a</text></svg>">
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #0d0d16;
+        --panel: #14141f;
+        --line: #ffffff14;
+        --ink: #ece8f7;
+        --muted: #9d96b8;
+        --dim: #6f6a86;
+        --purple: #7c5cff;
+        --teal: #4ad6c8;
+        font-family: ui-sans-serif, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { padding: 0 20px 72px; line-height: 1.7; }
+      .wrap { max-width: 860px; margin: 0 auto; }
+
+      /* ---------- 首屏 ---------- */
+      .hero { padding: 72px 0 40px; text-align: center; }
+      .hero h1 {
+        font-size: clamp(40px, 9vw, 62px);
+        font-weight: 800;
+        letter-spacing: -.035em;
+        line-height: 1.05;
+        background: linear-gradient(100deg, #ffffff 25%, #b9a6ff 60%, #4ad6c8);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .hero .tag { margin-top: 18px; color: var(--muted); font-size: clamp(15px, 2.4vw, 17px); }
+      .hero .tag b { color: var(--ink); font-weight: 600; }
+      .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 22px; }
+      .chip {
+        font-size: 12.5px; font-weight: 600; padding: 5px 12px; border-radius: 999px;
+        border: 1px solid var(--line); background: #ffffff0a; color: var(--muted);
+      }
+      .chip.hi { border-color: #7c5cff55; background: #7c5cff1a; color: #c3b4ff; }
+      .chip.ok { border-color: #4ad6c844; background: #4ad6c81a; color: #8ce8dd; }
+
+      .cta { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 30px; }
+      .btn {
+        display: inline-block; padding: 11px 22px; border-radius: 10px; font-size: 14px;
+        font-weight: 650; text-decoration: none; border: 1px solid var(--line);
+        background: #ffffff0d; color: var(--ink); transition: background .15s ease, border-color .15s ease;
+      }
+      .btn:hover { background: #ffffff1a; border-color: #ffffff30; }
+      .btn.primary { background: var(--purple); border-color: var(--purple); color: #fff; }
+      .btn.primary:hover { background: #8d70ff; border-color: #8d70ff; }
+
+      /* ---------- 通用区块 ---------- */
+      section { margin-top: 56px; }
+      h2 { font-size: 20px; font-weight: 700; letter-spacing: -.01em; margin-bottom: 6px; }
+      h2 .num { color: var(--dim); font-variant-numeric: tabular-nums; margin-right: 8px; font-weight: 600; }
+      .lede { color: var(--muted); font-size: 14.5px; margin-bottom: 20px; }
+      p { color: var(--muted); font-size: 14.5px; }
+      p + p { margin-top: 12px; }
+      strong { color: var(--ink); font-weight: 650; }
+      a { color: #b9a6ff; }
+
+      pre {
+        background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+        padding: 16px 18px; overflow-x: auto; margin: 16px 0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px; line-height: 1.7; color: #d8d3ea;
+      }
+      pre .c { color: #6f6a86; }
+      pre .k { color: #c3b4ff; }
+      pre .s { color: #8ce8dd; }
+
+      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin-top: 4px; }
+      .card {
+        background: var(--panel); border: 1px solid var(--line); border-radius: 12px;
+        padding: 18px; text-decoration: none; display: block; transition: border-color .15s ease, transform .15s ease;
+      }
+      .card:hover { border-color: #7c5cff66; transform: translateY(-2px); }
+      .card h3 { font-size: 15.5px; color: var(--ink); margin-bottom: 6px; font-weight: 700; }
+      .card p { font-size: 13.5px; margin: 0; }
+      .card .meta { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; font-size: 12px; color: var(--dim); }
+      .card .meta span { border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; }
+
+      table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 13.5px; }
+      th, td { text-align: left; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+      th { color: var(--dim); font-weight: 600; font-size: 12.5px; }
+      td { color: var(--muted); }
+      td:last-child, th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+      td b { color: var(--teal); }
+
+      .note {
+        margin-top: 20px; padding: 14px 16px; border-left: 2px solid var(--purple);
+        background: #ffffff06; border-radius: 0 10px 10px 0; font-size: 13.5px;
+      }
+      .note b { color: var(--ink); }
+      .note.warn { border-left-color: #ffb454; }
+
+      ul.tick { list-style: none; margin-top: 6px; }
+      ul.tick li { position: relative; padding-left: 24px; color: var(--muted); font-size: 14px; margin: 9px 0; }
+      ul.tick li::before { content: "▸"; position: absolute; left: 6px; color: var(--purple); font-weight: 700; }
+
+      footer {
+        margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--line);
+        display: flex; flex-wrap: wrap; gap: 10px 20px; justify-content: space-between;
+        color: var(--dim); font-size: 12.5px;
+      }
+      footer a { color: var(--muted); text-decoration: none; }
+      footer a:hover { color: var(--ink); }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+
+      <div class="hero">
+        <h1>axon</h1>
+        <p class="tag">
+          零依赖的神经网络框架。从张量运算到自动微分，从层到训练循环，<b>全部手写</b>。<br>
+          同一份代码在浏览器和 Node.js 里都能跑。
+        </p>
+        <div class="chips">
+          <span class="chip ok">0 依赖</span>
+          <span class="chip hi">54 个导出</span>
+          <span class="chip">80 个测试</span>
+          <span class="chip">MIT</span>
+          <span class="chip">Node ≥ 18</span>
+        </div>
+        <div class="cta">
+          <a class="btn primary" href="./demo/">▶ 在线 Demo · 螺旋分类实时训练</a>
+          <a class="btn" href="https://github.com/wulier-arch/axon">GitHub</a>
+          <a class="btn" href="https://www.npmjs.com/package/axon-net">npm</a>
+        </div>
+      </div>
+
+      <section>
+        <h2><span class="num">01</span>为什么做这个</h2>
+        <p class="lede">现有的 JS 深度学习库基本是 TensorFlow.js / ONNX 的封装。你没法在不装依赖的前提下读懂它们的反向传播，也没法在浏览器里断点进去看梯度是怎么流回去的。</p>
+        <p>axon 想做的是另一件事：<strong>把这件事摊开给你看</strong>。</p>
+        <ul class="tick">
+          <li><strong>零依赖</strong> —— 不装任何东西，克隆下来就能跑</li>
+          <li><strong>梯度可验证</strong> —— 每个算子都自带有限差分对照，梯度错了立刻暴露</li>
+          <li><strong>能真的训练</strong> —— 不只是算子库，层、优化器、训练循环一应俱全</li>
+          <li><strong>双端同构</strong> —— 浏览器里能训练，Node 里能训练，同一份代码</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2><span class="num">02</span>核心机制：梯度校验内建</h2>
+        <p class="lede">大多数框架验证梯度的方式是「跑起来没报错就算对」。axon 把对照数值梯度做进了库里。</p>
+        <pre><span class="c">// 手写新算子后，这样验证你的梯度公式</span>
+<span class="k">const</span> r = checkGradient(() => myOp(a, b).sum(), [a, b]);
+<span class="k">if</span> (!r.passed) <span class="k">throw new</span> Error(r.report);</pre>
+        <p>这个机制抓到了三个<strong>静默 bug</strong>——它们都不报错，只是默默算错：<code>matmul</code> 权重梯度只累加了第一个输出列、优化器动量缓冲区越界、<code>mse</code> 求和维度错误。前向传播全都正确，只有数值梯度能发现。</p>
+        <div class="note">
+          <b>为什么这比性能数字更有说服力：</b>它证明作者真的在验证正确性，而不是让测试绿了就算完。
+        </div>
+      </section>
+
+      <section>
+        <h2><span class="num">03</span>训练能力</h2>
+        <p class="lede">不是「跑起来没报错」，而是<strong>收敛到接近最优</strong>。<code>npm run benchmark</code> 可复现。</p>
+        <table>
+          <tr><th>数据集</th><th>准确率</th><th>损失</th><th>耗时</th></tr>
+          <tr><td>XOR（4 样本）</td><td><b>100.0%</b></td><td>0.0002</td><td>6 ms</td></tr>
+          <tr><td>螺旋（300 样本）</td><td><b>100.0%</b></td><td>0.0248</td><td>223 ms</td></tr>
+          <tr><td>高斯簇（400 样本）</td><td><b>100.0%</b></td><td>0.0004</td><td>9 ms</td></tr>
+        </table>
+        <p style="margin-top:14px">线性回归可精确逼近真值：学到 <code>w = 2.511</code>（真值 2.5）、<code>b = -1.2115</code>（真值 -1.2）。</p>
+      </section>
+
+      <section>
+        <h2><span class="num">04</span>性能：这是刻意的取舍</h2>
+        <p class="lede">纯 CPU，无 SIMD / 多线程 / WASM（Node v24 · arm64 实测，数值随机器浮动）。</p>
+        <table>
+          <tr><th>运算</th><th>吞吐</th></tr>
+          <tr><td><code>matmul</code> 512×512</td><td>2.36 GFLOP/s</td></tr>
+          <tr><td><code>matmul</code> 1024×1024</td><td>2.30 GFLOP/s</td></tr>
+          <tr><td>MLP 784→128→10 单步（batch 32）</td><td>7.8 ms</td></tr>
+        </table>
+        <div class="note warn">
+          <b>坦白说这个数字和 TensorFlow.js 差一个数量级——这是刻意的。</b>
+          数据确实存在 <code>Float64Array</code> 里，但计算是标量 JS 循环：没有 WASM、没有 SIMD、没有算子融合。换来的是每一行都能读懂。
+          <strong>你应该用它学习原理，而不是训 ResNet。</strong>
+        </div>
+      </section>
+
+      <section>
+        <h2><span class="num">05</span>快速开始</h2>
+        <pre>npm install axon-net</pre>
+        <p>也可以不用安装，直接克隆——本项目零依赖，<code>src/</code> 就是全部：</p>
+        <pre>git clone https://github.com/wulier-arch/axon.git
+<span class="k">cd</span> axon &amp;&amp; npm test</pre>
+        <p>训练一个神经网络，<strong>11 行</strong>：</p>
+        <pre><span class="k">import</span> { Linear, Sequential, Adam, Trainer, crossEntropy, accuracy, makeSpiral } <span class="k">from</span> <span class="s">"axon-net"</span>;
+
+<span class="k">const</span> { x, y } = makeSpiral({ samples: 300 });
+
+<span class="k">const</span> model = <span class="k">new</span> Sequential()
+  .add(<span class="k">new</span> Linear(2, 32, { activation: <span class="s">"relu"</span>, seed: 1 }))
+  .add(<span class="k">new</span> Linear(32, 2, { seed: 2 }));
+
+<span class="k">const</span> trainer = <span class="k">new</span> Trainer({
+  model,
+  optimizer: <span class="k">new</span> Adam({ lr: 0.01 }),
+  lossFn: crossEntropy,
+  metricFn: accuracy,
+  epochs: 400,
+  batchSize: 32,
+});
+
+trainer.fit(x, y, y);
+console.log(trainer.history.at(-1));
+<span class="c">// { epoch: 399, loss: 0.0248, metric: 1 }</span></pre>
+      </section>
+
+      <section>
+        <h2><span class="num">06</span>已实现</h2>
+        <div class="grid">
+          <div class="card">
+            <h3>张量与卷积</h3>
+            <p>加减乘除、<code>matmul</code>、<code>softmax</code>、<code>reshape</code>、<code>transpose</code>（N 维轴置换）、<code>conv2d</code>（im2col + GEMM）、池化。</p>
+          </div>
+          <div class="card">
+            <h3>自动微分</h3>
+            <p>反向模式，拓扑排序后逆序执行。关键区分 <code>isGraphNode()</code> 而非 <code>requiresGrad</code>，否则组合运算的梯度链会断掉。</p>
+          </div>
+          <div class="card">
+            <h3>层与优化器</h3>
+            <p><code>Linear</code>（He 初始化）、<code>Dropout</code>、<code>LayerNorm</code>、<code>Embedding</code>、<code>MultiHeadAttention</code>、<code>Sequential</code>；SGD / Momentum / Adam / AdamW / RMSProp / Scheduler。</p>
+          </div>
+          <div class="card">
+            <h3>数值稳定性</h3>
+            <p><code>softmax</code> 先减行最大值避免溢出；<code>crossEntropy</code> 用 log-sum-exp；<code>binaryCrossEntropy</code> clamp 概率，否则一次越界损失就变 NaN。</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2><span class="num">07</span>路线图</h2>
+        <p class="lede">已完成：层与 <code>Sequential</code>、优化器、损失函数、训练循环、基准测试（v0.2.0），浏览器端 demo（v0.2.1），<code>LayerNorm</code>、<code>Embedding</code>、<code>MultiHeadAttention</code>（v0.3.0）。</p>
+        <ul class="tick">
+          <li>Transformer Block（多头前馈 + 残差连接）</li>
+          <li>BPE 分词器</li>
+          <li>BatchNorm</li>
+          <li>模型序列化（JSON）</li>
+          <li><code>conv2d</code> 支持批次维度</li>
+        </ul>
+        <div class="note">
+          <b>参与贡献：</b>如果你实现了新算子，请务必附上梯度校验用例——这是本项目唯一的质量底线。
+        </div>
+      </section>
+
+      <footer>
+        <span>MIT © 2026 wulier-arch</span>
+        <span>
+          <a href="https://github.com/wulier-arch/axon">源码</a> ·
+          <a href="https://github.com/wulier-arch/axon/blob/main/README.md">README</a> ·
+          <a href="https://github.com/wulier-arch/axon/blob/main/CHANGELOG.md">更新日志</a> ·
+          <a href="./demo/">在线 Demo</a>
+        </span>
+      </footer>
+
+    </div>
+  </body>
+</html>

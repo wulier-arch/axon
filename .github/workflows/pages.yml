@@ -6,6 +6,7 @@ on:
     paths:
       - "demo/**"
       - "src/**"
+      - "site/**"
       - "package.json"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
@@ -33,11 +34,16 @@ jobs:
         id: pages
         uses: actions/configure-pages@v5
 
-      # 只发布 demo 与 src：demo 通过 ../src/ 直接引用框架源码，
+      # 只发布站点页、demo 与 src：demo 通过 ../src/ 直接引用框架源码，
       # 不做打包，这也正是 axon 零依赖设计目标的体现。
+      #
+      # site/index.html 必须落到 _site 根目录，否则
+      # https://wulier-arch.github.io/axon/ 会因为没有 index.html 而 404
+      # （demo 一直能访问，是因为它在 /axon/demo/ 下自带 index.html）。
       - name: 准备发布目录
         run: |
           mkdir -p _site
+          cp site/index.html _site/index.html
           cp -r demo _site/demo
           cp -r src _site/src
           cp package.json README.md LICENSE _site/
