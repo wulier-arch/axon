@@ -51,7 +51,7 @@ jobs:
           cp package.json README.md LICENSE _site/
 
       - name: 上传静态站点
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
