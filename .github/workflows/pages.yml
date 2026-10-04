@@ -32,7 +32,7 @@ jobs:
 
       - name: 配置 Pages
         id: pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v6
 
       # 只发布站点页、demo 与 src：demo 通过 ../src/ 直接引用框架源码，
       # 不做打包，这也正是 axon 零依赖设计目标的体现。
