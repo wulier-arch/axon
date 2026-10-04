@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import {
-  Tensor, add, mul, scale, sub, div, matmul, relu, tanh, sigmoid,
+  Tensor, add, mul, scale, sub, div, matmul, relu, tanh, sigmoid, gelu,
   softmax, sum, mean, reshape, transpose, gatherRows, concat,
   backward, checkGradient,
 } from "../src/index.js";
@@ -111,7 +111,7 @@ describe("逐元素算子梯度", () => {
 });
 
 describe("激活函数梯度", () => {
-  for (const [name, fn] of [["relu", relu], ["tanh", tanh], ["sigmoid", sigmoid]]) {
+  for (const [name, fn] of [["relu", relu], ["tanh", tanh], ["sigmoid", sigmoid], ["gelu", gelu]]) {
     it(name, () => {
       const x = Tensor.variable([0.5, -0.3, 1.2, -2.0], [2, 2]);
       backward(fn(x).sum());
@@ -129,6 +129,39 @@ describe("激活函数梯度", () => {
   it("tanh 输出落在 (-1,1)", () => {
     const x = Tensor.tensor([-10, 0, 10], [3]);
     for (const v of tanh(x).data) assert.ok(v > -1 && v < 1);
+  });
+
+  it("gelu(0) 恰为 0", () => {
+    const x = Tensor.tensor([0], [1]);
+    assert.equal(gelu(x).data[0], 0);
+  });
+
+  it("gelu 在负半轴保留少量负值（非硬截断）", () => {
+    // 这正是 GELU 与 ReLU 的关键区别：负区间不是简单归零，
+    // 而是平滑地衰减到 0，因此保留了负半轴的信息
+    const x = Tensor.tensor([-2, -1, -0.01], [3]);
+    const out = gelu(x).data;
+    for (const v of out) assert.ok(v < 0, "负输入应得到负输出");
+    assert.ok(out[0] > -0.05 && out[0] < -0.04, `gelu(-2) ≈ -0.0455，实得 ${out[0]}`);
+    // 越负越接近 0：|gelu(-2)| < |gelu(-1)|
+    assert.ok(Math.abs(out[0]) < Math.abs(out[1]),
+      `更负应更接近 0，实得 |${out[0]}| 与 |${out[1]}|`);
+  });
+
+  it("gelu 近似为 x·Φ(x)，在 x=1 处约为 0.8413", () => {
+    const x = Tensor.tensor([1], [1]);
+    assert.ok(Math.abs(gelu(x).data[0] - 0.8413) < 1e-3);
+  });
+
+  it("gelu 在正半轴单调上升且始终小于 x", () => {
+    // gelu(x) = x·Φ(x)，Φ(x) < 1，故 gelu(x) 恒小于 x；
+    // 但在 x≥1 之后已非常接近恒等映射
+    const x = Tensor.tensor([0.5, 1, 2, 3], [4]);
+    const out = gelu(x).data;
+    for (let i = 0; i < out.length; i++) assert.ok(out[i] < x.data[i]);
+    for (let i = 1; i < out.length; i++) assert.ok(out[i] > out[i - 1], "应单调递增");
+    // x=2 时 gelu(2)=1.9546，与 2 相差 0.045
+    assert.ok(Math.abs(out[2] - 2) < 0.05, `gelu(2) 应接近 2，实得 ${out[2]}`);
   });
 });
 

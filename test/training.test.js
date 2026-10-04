@@ -10,7 +10,7 @@ import {
   Tensor, Linear, Sequential, Adam, AdamW, SGD, Scheduler, Trainer,
   crossEntropy, mse, accuracy, makeSpiral, makeBlobs, makeXor, Momentum,
   makeLinearRegression, backward, checkGradient, softmax,
-  LayerNorm, Embedding, MultiHeadAttention, mul, argmaxLast,
+  LayerNorm, Embedding, MultiHeadAttention, TransformerBlock, mul, argmaxLast,
 } from "../src/index.js";
 
 describe("Linear 层", () => {
@@ -280,6 +280,112 @@ describe("MultiHeadAttention", () => {
     }
     // 随机初始化的交叉熵约为 ln(3) ≈ 1.0986
     assert.ok(loss.data[0] < 0.2, `Transformer 块应收敛，实得 ${loss.data[0].toFixed(4)}`);
+  });
+});
+
+describe("TransformerBlock", () => {
+  /** 固定数据与损失，保证多次运行可比 */
+  function setup(blk, d, seq) {
+    const xD = Array.from({ length: seq * d }, (_, i) => Math.sin(i * 0.7) * 1.3);
+    const wD = Array.from({ length: seq * d }, (_, i) => ((i % 7) - 3) * 0.9 + 0.3);
+    const x = Tensor.variable(xD, [seq, d]);
+    const w = Tensor.tensor(wD, [seq, d]);
+    const loss = () => mul(blk.forward(x), w).sum();
+    backward(loss());
+    return { loss, inputs: [x, ...blk.parameters()] };
+  }
+
+  it("输出形状与输入一致", () => {
+    const blk = new TransformerBlock(8, 2, { seed: 1 });
+    const out = blk.forward(Tensor.tensor(new Array(32).fill(0.5), [4, 8]));
+    assert.deepEqual(out.shape, [4, 8]);
+  });
+
+  it("小配置下梯度可通过严格容差校验", () => {
+    const blk = new TransformerBlock(2, 1, { seed: 3 });
+    const { loss, inputs } = setup(blk, 2, 2);
+    const r = checkGradient(loss, inputs, { eps: 1e-6 });
+    assert.ok(r.passed, `梯度不匹配: ${r.report}`);
+  });
+
+  it("pre/post-LN 与因果掩码下梯度均正确", () => {
+    for (const normFirst of [true, false]) {
+      for (const causal of [false, true]) {
+        const blk = new TransformerBlock(4, 2, { causal, normFirst, seed: 3 });
+        const { loss, inputs } = setup(blk, 4, 3);
+        const r = checkGradient(loss, inputs, { eps: 1e-6, tol: 1e-3 });
+        assert.ok(r.passed, `normFirst=${normFirst} causal=${causal}: ${r.report}`);
+      }
+    }
+  });
+
+  it("残差随 eps 线性收敛，证明梯度本身正确", () => {
+    // block 链深约 20 个算子，差分截断误差比单个注意力层又高一个量级。
+    // 判据与注意力层一致：真梯度写错会留下不随 eps 消失的下限。
+    const errAt = (eps) => {
+      const blk = new TransformerBlock(4, 2, { seed: 3 });
+      const { loss, inputs } = setup(blk, 4, 3);
+      return checkGradient(loss, inputs, { eps }).maxRelError;
+    };
+    const ratio = errAt(1e-4) / errAt(1e-5);
+    assert.ok(ratio > 4 && ratio < 25,
+      `eps 降 10 倍而误差仅降 ${ratio.toFixed(2)} 倍，残差不随 eps 消失，疑似梯度有误`);
+  });
+
+  it("子层权重全零时退化为恒等映射", () => {
+    // pre-LN 下残差通路是恒等的：若某处漏了残差相加，这里立刻暴露
+    const blk = new TransformerBlock(4, 2, { seed: 5 });
+    for (const p of blk.parameters()) p.data.fill(0);
+    const xD = [1, 2, 3, 4, 5, 6, 7, 8];
+    const out = blk.forward(Tensor.tensor(xD, [2, 4]));
+    assert.deepEqual(Array.from(out.data), xD);
+  });
+
+  it("参数量为 dModel=8、dFF=32 时的 840", () => {
+    // norm1(16) + attn(4×64) + norm2(16) + ff1(8×32+32) + ff2(32×8+8)
+    const blk = new TransformerBlock(8, 2, { dFF: 32 });
+    assert.equal(blk.countParams(), 840);
+  });
+
+  it("dFF 默认为 dModel 的 4 倍", () => {
+    assert.equal(new TransformerBlock(8, 2).dFF, 32);
+  });
+
+  it("FFN 激活可切换为 relu", () => {
+    const blk = new TransformerBlock(4, 2, { ffnActivation: "relu", seed: 3 });
+    assert.equal(blk.activation, "relu");
+    const { loss, inputs } = setup(blk, 4, 3);
+    assert.ok(checkGradient(loss, inputs, { eps: 1e-6, tol: 1e-3 }).passed);
+  });
+
+  it("输入维度不符时报错", () => {
+    const blk = new TransformerBlock(8, 2);
+    assert.throws(() => blk.forward(Tensor.tensor([1, 2, 3], [1, 3])), /输入维度/);
+  });
+
+  it("堆叠两个 block 后仍能训练到收敛", () => {
+    const emb = new Embedding(6, 8, { seed: 11 });
+    const b1 = new TransformerBlock(8, 2, { seed: 12 });
+    const b2 = new TransformerBlock(8, 2, { seed: 13 });
+    const head = new Linear(8, 3, { seed: 14 });
+
+    const ids = [0, 1, 2, 3, 4, 5];
+    const targets = Tensor.tensor([0, 1, 2, 0, 1, 2], [6, 1]);
+    const params = [
+      ...emb.parameters(), ...b1.parameters(), ...b2.parameters(), ...head.parameters(),
+    ];
+    const opt = new Adam({ lr: 0.02 });
+
+    let loss = null;
+    for (let step = 0; step < 80; step++) {
+      for (const p of params) p.zeroGrad();
+      const out = head.forward(b2.forward(b1.forward(emb.forward(ids))));
+      loss = crossEntropy(out, targets);
+      backward(loss);
+      opt.step(params, params.map((p) => p.grad));
+    }
+    assert.ok(loss.data[0] < 0.2,
+      `两层 Transformer 应收敛，实得 ${loss.data[0].toFixed(4)}`);
   });
 });
 

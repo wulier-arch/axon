@@ -288,6 +288,34 @@ export const sigmoid = (a) =>
 export const exp = (a) => unary(a, Math.exp, Math.exp, "exp");
 export const log = (a) => unary(a, Math.log, (x) => 1 / x, "log");
 
+/**
+ * GELU（tanh 近似版），Transformer 前馈网络常用的激活。
+ *
+ *   gelu(x) ≈ 0.5·x·(1 + tanh(√(2/π)·(x + 0.044715·x³)))
+ *
+ * 精确形式是 x·Φ(x)，需要 erf；tanh 近似把 erf 换成 tanh，
+ * 精度差在 1e-3 量级，却更省算力，且求导干净——这是 GPT-2 起
+ * 各家实现都在用的版本。
+ *
+ * 求导时别漏掉三次项的导数：
+ *   d/dx gelu = 0.5·(1 + tanh(u)) + 0.5·x·(1 − tanh²(u))·u′
+ *   其中 u′ = √(2/π)·(1 + 3·0.044715·x²)
+ */
+const GELU_C = Math.sqrt(2 / Math.PI);
+const GELU_A = 0.044715;
+export const gelu = (a) =>
+  unary(
+    a,
+    (x) => 0.5 * x * (1 + Math.tanh(GELU_C * (x + GELU_A * x * x * x))),
+    (x) => {
+      const u = GELU_C * (x + GELU_A * x * x * x);
+      const t = Math.tanh(u);
+      const du = GELU_C * (1 + 3 * GELU_A * x * x);
+      return 0.5 * (1 + t) + 0.5 * x * (1 - t * t) * du;
+    },
+    "gelu"
+  );
+
 /** 沿最后一维做 softmax（数值稳定版：先减最大值） */
 export function softmax(a) {
   if (a.ndim < 1) throw new Error("softmax: 至少需要一维");

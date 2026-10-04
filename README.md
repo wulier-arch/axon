@@ -10,7 +10,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-a48aff.svg)](LICENSE)
 [![CI](https://github.com/wulier-arch/axon/actions/workflows/ci.yml/badge.svg)](https://github.com/wulier-arch/axon/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-80%20passed-4ec9a0.svg)](test/)
+[![tests](https://img.shields.io/badge/tests-95%20passed-4ec9a0.svg)](test/)
 [![dependencies](https://img.shields.io/badge/dependencies-0-ff6b6b.svg)](package.json)
 [![node](https://img.shields.io/badge/node-%3E%3D18-5cb85c.svg)](package.json)
 
@@ -129,14 +129,15 @@ XOR (4 样本)              100.0%      0.0002          6ms
 | 采样 | `gatherRows` `concat` `argmaxLast` |
 | 卷积 | `conv2d`（im2col + GEMM）`maxPool2d` `avgPool2d` |
 | 自动微分 | `backward` `collectLeaves` `zeroGrad` |
-| 层 | `Linear`（He 初始化）`Dropout` `LayerNorm` `Embedding` `MultiHeadAttention` `Sequential` |
+| 层 | `Linear`（He 初始化）`Dropout` `LayerNorm` `Embedding` `MultiHeadAttention` `TransformerBlock` `Sequential` |
+| 激活 | `relu` `tanh` `sigmoid` `softmax` `gelu` |
 | 损失 | `crossEntropy` `mse` `binaryCrossEntropy` `accuracy` |
 | 优化器 | `SGD` `Momentum` `Adam` `AdamW` `RMSProp` `Scheduler` |
 | 训练 | `Trainer`（batch / epoch / 早停 / 历史） |
 | 数据集 | `makeSpiral` `makeBlobs` `makeXor` `makeLinearRegression` |
 | 验证 | `checkGradient` `numericalGradient` `highOrderGradient` |
 
-共 **54 个导出**，**80 个测试**。
+共 **56 个导出**，**95 个测试**。
 
 ## 设计要点
 
@@ -176,7 +177,7 @@ if (!r.passed) throw new Error(r.report);
 ```bash
 git clone https://github.com/wulier-arch/axon.git
 cd axon
-npm test          # 80 个用例，无需 npm install
+npm test          # 95 个用例，无需 npm install
 npm run benchmark
 ```
 
@@ -194,9 +195,9 @@ python3 -m http.server 8000
 ## 路线图
 
 已完成：层与 `Sequential`、优化器、损失函数、训练循环、基准测试（v0.2.0），
-浏览器端 demo（v0.2.1），`LayerNorm`、`Embedding`、`MultiHeadAttention`（v0.3.0）。
+浏览器端 demo（v0.2.1），`LayerNorm`、`Embedding`、`MultiHeadAttention`、
+`TransformerBlock`（v0.3.0）。
 
-- [ ] Transformer Block（多头前馈 + 残差连接）
 - [ ] BPE 分词器
 - [ ] BatchNorm
 - [ ] 模型序列化（JSON）

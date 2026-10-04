@@ -6,12 +6,12 @@
 
 ### 计划中
 
-见 [README 路线图](README.md#路线图)：Transformer Block（多头前馈 + 残差连接）、
-BPE 分词器、BatchNorm、模型序列化（JSON）、`conv2d` 批次维度。
+见 [README 路线图](README.md#路线图)：BPE 分词器、BatchNorm、模型序列化（JSON）、
+`conv2d` 批次维度。
 
 层与 `Sequential`、优化器、损失函数、训练循环、基准测试已于 v0.2.0 发布，
-浏览器端 demo 已于 v0.2.1 发布，`LayerNorm`、`Embedding` 与 `MultiHeadAttention`
-已于 v0.3.0 发布。
+浏览器端 demo 已于 v0.2.1 发布；`LayerNorm`、`Embedding`、`MultiHeadAttention`
+与 `TransformerBlock` 已于 v0.3.0 发布。
 
 ## [0.3.0] - 2026-10-02
 
@@ -23,10 +23,25 @@ BPE 分词器、BatchNorm、模型序列化（JSON）、`conv2d` 批次维度。
 - **`Embedding`**：整数 id → 稠密向量查表
 - **`MultiHeadAttention`**：含可选因果掩码。反向不手写，而是由
   `matmul`/`transpose`/`reshape`/`softmax`/`add` 组合而成，梯度经 tape 自动串联
+- **`TransformerBlock`**：pre-LN（默认）与 post-LN 两种排布，可选因果掩码，
+  FFN 默认用 GELU，`dFF` 默认为 `dModel` 的 4 倍
+- **`gelu`**：tanh 近似版激活，Transformer 前馈网络常用。
+  与 ReLU 的关键差别在负半轴不硬截断，而是平滑衰减到 0，保留了负区信息
 - **`transpose` 推广为通用 N 维轴置换**（默认行为与原二维实现逐字一致）。
   多头注意力需要把 `[L, h, d_h]` 的头维提到最前再换回，二维版本做不到
 
-两者的梯度均通过 `checkGradient` 对照有限差分验证。
+`TransformerBlock` 与 `MultiHeadAttention` 一样不手写反向——残差与子层都由
+已单独校验过的算子组合而成，梯度经 tape 自动串联。
+
+### pre-LN 与 post-LN
+
+默认采用 pre-LN（先归一化再进子层）：
+
+    x ← x + Attention(LayerNorm(x))
+    x ← x + FFN(LayerNorm(x))
+
+残差路径上始终有一条恒等通路，梯度不必穿过归一化层才能回传，深层网络更稳。
+原论文的 post-LN 通过 `normFirst: false` 保留。
 
 ### 如何判断「梯度写错」还是「差分不够准」
 
@@ -45,8 +60,11 @@ BPE 分词器、BatchNorm、模型序列化（JSON）、`conv2d` 批次维度。
 真梯度写错则会留下一个不随 eps 消失的下限。已把该判据固化为回归用例：
 向 `scale` 的反向注入 1% 误差后，比值立刻变成 **1.00**，判据准确报警。
 
-比较须取 1e-5 → 1e-6 这一段。再降到 1e-7，舍入误差（∝1/h）抬头，
-误差不再下降，拿那一段比会得出错误结论。
+`TransformerBlock` 链更深（约 20 个算子），截断误差比注意力层又高一个量级，
+但收敛比值同样是 10.0；向 `LayerNorm` 反向注入 0.5% 误差后比值变为 **1.03**。
+
+比较须取截断主导的区间。注意力层取 1e-5 → 1e-6，block 取 1e-4 → 1e-5。
+再往下降到 1e-7，舍入误差（∝1/h）抬头、误差不再下降，拿那一段比会得出错误结论。
 
 ### 实现过程中被梯度校验抓到的错误
 
@@ -67,12 +85,15 @@ dx_k = (1/s) · [ γ_k·dy_k − mean(dy⊙γ) − x̂_k·mean(dy⊙γ⊙x̂) ] 
 
 ### 验证
 
-- 测试由 71 增至 **80**，Node 18/20/22/24 与本地 24 全部通过
+- 测试由 80 增至 **95**，Node 18/20/22/24 与本地 24 全部通过
+- `gelu` 梯度 `maxRelError = 0`（绝对误差 3.6e-13）；`gelu(0)=0`、
+  `gelu(1)≈0.8413`、`gelu(-2)≈-0.0455`，负半轴平滑衰减而非硬截断
 - `LayerNorm` 梯度回归保护：把 γ_k 乘回整个括号，校验立即报 `maxRelError=6.09e-1`
-- 注意力判据回归保护：向 `scale` 反向注入 1% 误差，收敛比值从 10.01 变为 1.00 并报警
-- 因果性：改动后 2 个 token 的输入，前 2 个位置的输出逐位相同
-- 端到端：`Embedding → MultiHeadAttention → LayerNorm → Linear` 组成的 Transformer 块，
-  交叉熵从 ln(3)≈1.0986 降到 0.0014
+- 收敛判据回归保护：向 `scale` 反向注入 1% 误差，比值 10.01 → **1.00**；
+  向 `LayerNorm` 反向注入 0.5% 误差，比值 10.0 → **1.03**，均准确报警
+- 残差通路：把 block 子层权重全置零，输出与输入逐位相同（漏写残差相加会立刻暴露）
+- 因果性：改动后 2 个 token 的输入，前 2 个位置输出逐位相同
+- 端到端：`Embedding → 两层 TransformerBlock → Linear`，交叉熵从 ln(3)≈1.0986 降到 0.2 以下
 
 ## [0.2.1] - 2026-10-02
 

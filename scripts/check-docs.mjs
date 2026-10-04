@@ -219,13 +219,31 @@ const pkg = JSON.parse(read("package.json"));
 {
   const MAX_FILES = 30;
   const MAX_KB = 200;
-  try {
-    const out = execFileSync(
+
+  // 试一次默认配置；失败则换独立缓存目录重试。
+  // 本机 ~/.npm 若属主异常（如被别的 uid 写过），默认缓存会报 EEXIST，
+  // 此时体积检查不该被静默跳过——退一步用临时缓存即可。
+  const runPack = (extraArgs) =>
+    execFileSync(
       "npm",
-      ["pack", "--dry-run", "--json", "--ignore-scripts"],
+      ["pack", "--dry-run", "--json", "--ignore-scripts", ...extraArgs],
       { cwd: ROOT, encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"], timeout: 120000 }
     );
-    const info = JSON.parse(out)[0];
+
+  let info = null;
+  let lastErr = null;
+  for (const extra of [[], ["--cache", "/tmp/.axon-npm-cache"]]) {
+    try {
+      info = JSON.parse(runPack(extra))[0];
+      break;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+
+  if (!info) {
+    warnings.push(`无法执行 npm pack --dry-run：${String(lastErr?.message).slice(0, 80)}`);
+  } else {
     const files = info.entryCount;
     const kb = info.unpackedSize / 1024;
     if (files > MAX_FILES) {
@@ -235,8 +253,6 @@ const pkg = JSON.parse(read("package.json"));
       warnings.push(`npm 包解压后 ${kb.toFixed(0)} kB，超过上限 ${MAX_KB} kB`);
     }
     if (files === 0) errors.push("npm pack 未产出任何文件");
-  } catch (e) {
-    warnings.push(`无法执行 npm pack --dry-run：${String(e.message).slice(0, 80)}`);
   }
 }
 

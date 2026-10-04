@@ -8,7 +8,7 @@
 
 import { Tensor } from "../tensor/tensor.js";
 import {
-  add, matmul, relu, tanh, sigmoid, softmax, reshape, transpose, scale,
+  add, matmul, relu, tanh, sigmoid, softmax, reshape, transpose, scale, gelu,
 } from "../tensor/ops.js";
 
 /** 可复现的伪随机数发生器，保证初始化可重复 */
@@ -453,6 +453,100 @@ export class MultiHeadAttention {
       wk: Array.from(this.wk.data),
       wv: Array.from(this.wv.data),
       wo: Array.from(this.wo.data),
+    };
+  }
+}
+
+/**
+ * TransformerBlock：现代 Transformer 的标准单元。
+ *
+ *   x ← x + Attention(LayerNorm(x))
+ *   x ← x + FFN(LayerNorm(x))
+ *
+ * 默认是 **pre-LN**（先归一化再进子层），这是 2018 年之后的通行做法。
+ * 与原论文的 post-LN（子层之后归一化）相比，pre-LN 在深层网络里更稳：
+ * 残差路径上始终有一条恒等通路，梯度不必穿过归一化层才能回传，
+ * 训练时不易发散、也不需要精细的 warmup 调参。
+ *
+ * FFN 是先扩再缩的两层前馈，dFF 通常取 4·dModel：
+ *
+ *   FFN(x) = W₂·gelu(W₁·x + b₁) + b₂
+ *
+ * 它逐位置作用、参数共享，参数量占整个 block 的大头；先扩张再收缩
+ * 的结构让中间表示有更大的容量，而最终输出维度不变，可以直接残差相加。
+ *
+ * 和 MultiHeadAttention 一样，这里不手写反向——残差与子层都由
+ * add / LayerNorm / Linear 等已校验过的算子组合而成。
+ */
+export class TransformerBlock {
+  /**
+   * @param {number} dModel 模型维度，须能被 heads 整除
+   * @param {number} heads  注意力头数
+   * @param {object} opts   dFF / causal / normFirst / seed / ffnActivation
+   */
+  constructor(dModel, heads, opts = {}) {
+    this.dModel = dModel;
+    this.name = "transformer";
+    this.normFirst = opts.normFirst !== false;
+    this.dFF = opts.dFF ?? dModel * 4;
+
+    this.norm1 = new LayerNorm(dModel);
+    this.attn = new MultiHeadAttention(dModel, heads, {
+      causal: opts.causal ?? false,
+      seed: opts.seed ?? 31,
+    });
+    this.norm2 = new LayerNorm(dModel);
+
+    const act = opts.ffnActivation ?? "gelu";
+    this.ff1 = new Linear(dModel, this.dFF, { seed: (opts.seed ?? 31) + 1 });
+    this.ff2 = new Linear(this.dFF, dModel, { seed: (opts.seed ?? 31) + 2 });
+    this.activation = act;
+    this.actFn = act === "relu" ? relu : act === "gelu" ? gelu : tanh;
+  }
+
+  parameters() {
+    return [
+      ...this.norm1.parameters(),
+      ...this.attn.parameters(),
+      ...this.norm2.parameters(),
+      ...this.ff1.parameters(),
+      ...this.ff2.parameters(),
+    ];
+  }
+
+  countParams() {
+    return this.parameters().reduce((sum, t) => sum + t.size, 0);
+  }
+
+  /** 接受 [seqLen, dModel]，返回同形状 */
+  forward(x) {
+    if (x.shape[1] !== this.dModel) {
+      throw new Error(`TransformerBlock: 输入维度 ${x.shape[1]}，期望 ${this.dModel}`);
+    }
+    let h = x;
+    if (this.normFirst) {
+      h = add(x, this.attn.forward(this.norm1.forward(x)));
+      h = add(h, this._ffn(this.norm2.forward(h)));
+    } else {
+      h = this.norm1.forward(add(x, this.attn.forward(x)));
+      h = this.norm2.forward(add(h, this._ffn(h)));
+    }
+    return h;
+  }
+
+  _ffn(x) {
+    return this.ff2.forward(this.actFn(this.ff1.forward(x)));
+  }
+
+  toJSON() {
+    return {
+      type: "TransformerBlock",
+      dModel: this.dModel,
+      heads: this.attn.heads,
+      dFF: this.dFF,
+      normFirst: this.normFirst,
+      activation: this.activation,
+      causal: this.attn.causal,
     };
   }
 }
