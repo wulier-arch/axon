@@ -9,6 +9,9 @@
   },
   "files": [
     "src",
+    "benchmark",
+    "examples",
+    "docs/*.md",
     "README.md",
     "LICENSE"
   ],
