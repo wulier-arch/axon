@@ -155,8 +155,8 @@
         </p>
         <div class="chips">
           <span class="chip ok">0 依赖</span>
-          <span class="chip hi">54 个导出</span>
-          <span class="chip">80 个测试</span>
+          <span class="chip hi">56 个导出</span>
+          <span class="chip">95 个测试</span>
           <span class="chip">MIT</span>
           <span class="chip">Node ≥ 18</span>
         </div>
@@ -261,7 +261,7 @@ console.log(trainer.history.at(-1));
           </div>
           <div class="card">
             <h3>层与优化器</h3>
-            <p><code>Linear</code>（He 初始化）、<code>Dropout</code>、<code>LayerNorm</code>、<code>Embedding</code>、<code>MultiHeadAttention</code>、<code>Sequential</code>；SGD / Momentum / Adam / AdamW / RMSProp / Scheduler。</p>
+            <p><code>Linear</code>（He 初始化）、<code>Dropout</code>、<code>LayerNorm</code>、<code>Embedding</code>、<code>MultiHeadAttention</code>、<code>TransformerBlock</code>、<code>Sequential</code>；SGD / Momentum / Adam / AdamW / RMSProp / Scheduler。</p>
           </div>
           <div class="card">
             <h3>数值稳定性</h3>
@@ -272,9 +272,8 @@ console.log(trainer.history.at(-1));
 
       <section>
         <h2><span class="num">07</span>路线图</h2>
-        <p class="lede">已完成：层与 <code>Sequential</code>、优化器、损失函数、训练循环、基准测试（v0.2.0），浏览器端 demo（v0.2.1），<code>LayerNorm</code>、<code>Embedding</code>、<code>MultiHeadAttention</code>（v0.3.0）。</p>
+        <p class="lede">已完成：层与 <code>Sequential</code>、优化器、损失函数、训练循环、基准测试（v0.2.0），浏览器端 demo（v0.2.1），<code>LayerNorm</code>、<code>Embedding</code>、<code>MultiHeadAttention</code>、<code>TransformerBlock</code>（v0.3.0）。</p>
         <ul class="tick">
-          <li>Transformer Block（多头前馈 + 残差连接）</li>
           <li>BPE 分词器</li>
           <li>BatchNorm</li>
           <li>模型序列化（JSON）</li>
