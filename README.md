@@ -162,6 +162,9 @@ isGraphNode()   // 我是叶子变量，或我是某个算子的产物
 
 `checkGradient` 用有限差分对照解析梯度，同时算一阶和二阶中心差分并逐元素取误差更小者——既能抓住解析梯度的错误，也能排除"数值梯度本身不够准"造成的误判。
 
+完整原理、epsilon 收敛判据和实际抓到的错误见
+[有限差分梯度校验详解](docs/finite-difference-gradient-checks.md)。
+
 ```js
 // 手写新算子后，这样验证你的梯度公式
 const r = checkGradient(() => myOp(a, b).sum(), [a, b]);
