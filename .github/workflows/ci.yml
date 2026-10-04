@@ -49,6 +49,12 @@ jobs:
         # 这里在 CI 里显式拦住这类问题，避免本地绿灯、线上红灯。
         run: node scripts/check-test-layout.mjs
 
+      - name: 文档事实核查
+        # README / CHANGELOG 里都是硬编码的数字与说法（测试数徽章、
+        # 版本号、零依赖声明、包名），改代码时极易忘记同步。
+        # 这类错误不影响测试，却最伤公信力，所以在提交时就拦住。
+        run: node scripts/check-docs.mjs
+
       - name: 确认零依赖
         run: |
           if [ -d node_modules ]; then

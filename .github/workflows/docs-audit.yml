@@ -1,0 +1,55 @@
+name: 文档巡检
+
+# 定期复核文档与代码是否脱节。
+#
+# 为什么不放在 CI 里就够了：CI 只在 push 时跑。而这个项目的核心卖点是
+# 「把正确性摊开给你看」，偏偏最容易失准的就是文档里的硬编码数字——
+# 测试徽章、包体积、性能声明、外部链接，都只在代码变动时才需要同步，
+# 平时并不会自己坏掉。所以这里定期跑一次，作为独立信号。
+#
+# 注意：GitHub 的 schedule 在公开仓库上会在整点随机延迟数分钟触发，
+# 高峰期可能延迟更久，属正常现象，不是配置错误。
+
+on:
+  schedule:
+    # 每天 04:17 UTC（避开整点，减少与全网定时任务撞车导致的延迟）
+    - cron: "17 4 * * *"
+  workflow_dispatch: # 允许手动触发
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    name: 核查
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 准备 Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 文档事实核查
+        # 检查项：零依赖声明、Markdown 相对链接可达、CHANGELOG 版本
+        # 条目与链接引用完整、README 测试徽章与实际用例数一致、
+        # 已作废的技术表述、README 包名、npm 包体积上限。
+        run: node scripts/check-docs.mjs
+
+      - name: 测试文件结构自检
+        run: node scripts/check-test-layout.mjs
+
+      - name: 外部链接抽查
+        # 只查 README 里出现的外部链接是否还活着。
+        # GitHub 链接偶尔会因网络抖动失败，失败不阻断，仅记录。
+        run: |
+          for url in $(grep -oE 'https://[^ )"]+' README.md | sort -u); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -L --max-time 20 "$url" || echo "000")
+            echo "$code  $url"
+            if [ "$code" != "200" ] && [ "$code" != "000" ]; then
+              echo "::warning::链接返回 $code —— $url"
+            fi
+          done
