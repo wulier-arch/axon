@@ -147,8 +147,8 @@
         </p>
         <div class="chips">
           <span class="chip ok">0 dependencies</span>
-          <span class="chip hi">54 exports</span>
-          <span class="chip">80 tests</span>
+          <span class="chip hi">56 exports</span>
+          <span class="chip">95 tests</span>
           <span class="chip">MIT</span>
           <span class="chip">Node ≥ 18</span>
         </div>
@@ -251,7 +251,7 @@ console.log(trainer.history.at(-1));
           </div>
           <div class="card">
             <h3>Layers and optimizers</h3>
-            <p><code>Linear</code>, <code>Dropout</code>, <code>LayerNorm</code>, <code>Embedding</code>, <code>MultiHeadAttention</code>, <code>Sequential</code>, SGD, Momentum, Adam, AdamW, RMSProp, and schedulers.</p>
+            <p><code>Linear</code>, <code>Dropout</code>, <code>LayerNorm</code>, <code>Embedding</code>, <code>MultiHeadAttention</code>, <code>TransformerBlock</code>, <code>Sequential</code>, SGD, Momentum, Adam, AdamW, RMSProp, and schedulers.</p>
           </div>
           <div class="card">
             <h3>Numerical stability</h3>
@@ -262,8 +262,8 @@ console.log(trainer.history.at(-1));
 
       <section>
         <h2><span class="num">07</span>Roadmap</h2>
+        <p class="lede">Shipped: layers and <code>Sequential</code>, optimizers, losses, and training loops (v0.2.0); browser demo (v0.2.1); <code>LayerNorm</code>, <code>Embedding</code>, <code>MultiHeadAttention</code>, and <code>TransformerBlock</code> (v0.3.0).</p>
         <ul class="tick">
-          <li>Transformer block with feed-forward layers and residual connections</li>
           <li>BPE tokenizer</li>
           <li>BatchNorm</li>
           <li>JSON model serialization</li>

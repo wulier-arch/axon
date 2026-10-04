@@ -4,6 +4,28 @@
 
 ## [未发布]
 
+### 新增
+
+v0.3.0 之后的改动集中在「让新人能自己跑起来」与「把取舍讲清楚」，无 API 变更。
+
+- **可运行示例** `examples/`：`autograd.mjs` 演示 `Tensor.variable` / `backward` /
+  `checkGradient`，`train-spiral.mjs` 训练两层分类器。零安装，`node examples/*.mjs` 直接跑
+- **入门指南** `docs/getting-started.md`：从克隆到跑通第一个训练循环
+- **框架对比** `docs/comparison.md`：与 TensorFlow.js / Brain.js / ml5.js 的定位与取舍，
+  开头即声明这不是性能排名
+- **梯度校验说明** `docs/finite-difference-gradient-checks.md`：有限差分校验的原理、
+  误差判据，以及「梯度写错」与「差分不够准」如何区分
+- **路线图** `ROADMAP.md`：四阶段（基础 / 采纳 / 主流 / 生态）与明确的非目标，
+  工作项见置顶的 v0.4.0 roadmap issue
+- **社区规范**：Issue 模板（缺陷 / 功能 / 梯度校验）与 PR 模板
+
+### 工程化
+
+- CI 增加示例可运行性校验（`npm run example:autograd`、`npm run example:spiral`），
+  防止示例随源码演进而悄悄失效
+- `package.json` 的 `files` 纳入 `examples/` 与 `docs/*.md`，示例随 npm 包一起发布
+- 移除 Dependabot 配置，Actions 版本改为随主版本手动跟进
+
 ### 计划中
 
 见 [README 路线图](README.md#路线图)：BPE 分词器、BatchNorm、模型序列化（JSON）、
