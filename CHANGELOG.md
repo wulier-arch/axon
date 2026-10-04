@@ -7,10 +7,45 @@
 ### 计划中
 
 见 [README 路线图](README.md#路线图)：MultiHeadAttention / Transformer Block、BPE 分词器、
-Embedding / LayerNorm / BatchNorm、模型序列化（JSON）、`conv2d` 批次维度。
+BatchNorm、模型序列化（JSON）、`conv2d` 批次维度。
 
 层与 `Sequential`、优化器、损失函数、训练循环、基准测试已于 v0.2.0 发布，
-浏览器端 demo 已于 v0.2.1 发布。
+浏览器端 demo 已于 v0.2.1 发布，`LayerNorm` 与 `Embedding` 已于 v0.3.0 发布。
+
+## [0.3.0] - 2026-10-02
+
+版本目标：补齐 Transformer 的两个前置层，为后续注意力实现铺路。
+
+### 新增
+
+- **`LayerNorm`**：沿特征维标准化，逐行独立计算，不依赖 batch 内其他样本
+- **`Embedding`**：整数 id → 稠密向量查表
+
+两者的梯度均通过 `checkGradient` 对照有限差分验证（相对误差 8e-6）。
+
+### 实现过程中被梯度校验抓到的错误
+
+`LayerNorm` 的反向最初写成把 γ_k 乘到整个括号上：
+
+```js
+dx_k = (γ_k/s) · [ dy_k − mean(dy) − x̂_k·mean(dy⊙x̂) ]   // ❌
+```
+
+推导后正确形式是 γ_k 只作用于 dy_k 这一项：
+
+```js
+dx_k = (1/s) · [ γ_k·dy_k − mean(dy⊙γ) − x̂_k·mean(dy⊙γ⊙x̂) ]   // ✅
+```
+
+两处差异叠加使相对误差达 1.16。关闭 γ 时测试反而通过——这正是静默错误的
+典型形态：局部测试全绿，只有真正对照数值梯度才暴露。已把该形态补成回归用例。
+
+### 验证
+
+- 测试由 60 增至 **71**，Node 18/20/22/24 与本地 24 全部通过
+- 回归保护已验证：把 γ_k 乘回整个括号，梯度校验立即报 `maxRelError=6.09e-1`
+- 端到端：XOR 经 `Linear → LayerNorm → Linear` 仍达 100%；嵌入 + 线性分类器
+  200 步后交叉熵降到 1e-6，两类完全分开
 
 ## [0.2.1] - 2026-10-02
 
@@ -95,7 +130,8 @@ Embedding / LayerNorm / BatchNorm、模型序列化（JSON）、`conv2d` 批次�
 - 无 GPU 加速，纯 CPU 实现
 - 卷积输入为单样本（`[C,H,W]`），尚不支持批次维度
 
-[未发布]: https://github.com/wulier-arch/axon/compare/v0.2.1...HEAD
+[未发布]: https://github.com/wulier-arch/axon/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/wulier-arch/axon/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/wulier-arch/axon/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/wulier-arch/axon/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/wulier-arch/axon/releases/tag/v0.1.0

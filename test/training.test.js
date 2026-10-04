@@ -10,6 +10,7 @@ import {
   Tensor, Linear, Sequential, Adam, AdamW, SGD, Scheduler, Trainer,
   crossEntropy, mse, accuracy, makeSpiral, makeBlobs, makeXor, Momentum,
   makeLinearRegression, backward, checkGradient, softmax,
+  LayerNorm, Embedding, mul, argmaxLast,
 } from "../src/index.js";
 
 describe("Linear 层", () => {
@@ -45,6 +46,133 @@ describe("Linear 层", () => {
   it("参数量为 in*out + out", () => {
     const layer = new Linear(5, 3);
     assert.equal(layer.weight.size + layer.bias.size, 5 * 3 + 3);
+  });
+});
+
+/** LayerNorm 与 Embedding 梯度校验 */
+describe("LayerNorm", () => {
+  it("每行标准化后均值为 0 方差为 1（γ=1 β=0 时）", () => {
+    const ln = new LayerNorm(4, { gamma: false, beta: false });
+    const x = Tensor.tensor([1, 2, 3, 4, 10, 20, 30, 40], [2, 4]);
+    const out = ln.forward(x);
+    for (let r = 0; r < 2; r++) {
+      const row = Array.from(out.data.slice(r * 4, r * 4 + 4));
+      const mean = row.reduce((a, b) => a + b, 0) / 4;
+      const varsum = row.reduce((a, b) => a + (b - mean) ** 2, 0) / 4;
+      assert.ok(Math.abs(mean) < 1e-10, `第 ${r} 行均值 ${mean}`);
+      assert.ok(Math.abs(varsum - 1) < 1e-3, `第 ${r} 行方差 ${varsum}`);
+    }
+  });
+
+  it("γ 初始化为 1、β 初始化为 0", () => {
+    const ln = new LayerNorm(3);
+    for (const v of ln.gamma.data) assert.equal(v, 1);
+    for (const v of ln.beta.data) assert.equal(v, 0);
+  });
+
+  it("γ/β/输入的梯度均可通过有限差分校验", () => {
+    // 用固定的有符号权重做线性损失，让上游梯度 dy 恒为 O(1)。
+    // 若用 sum(y²)，y≈x̂ 时梯度只有 0.01 量级，有限差分的舍入噪声
+    // 会压过真实误差，测出来的 relError 是噪声而非 bug。
+    const ln = new LayerNorm(4);
+    ln.gamma.data.set([1.2, 0.8, 1.5, 0.9]);
+    ln.beta.data.set([0.1, -0.2, 0.3, 0.0]);
+    const x = Tensor.variable([1, 2, 3, 4, 10, 20, 30, 40], [2, 4]);
+    const w = Tensor.tensor([1, -2, 0.5, 3, -1, 0.7, 2, -0.3], [2, 4]);
+    const loss = () => mul(ln.forward(x), w).sum();
+    backward(loss());
+    const r = checkGradient(loss, [x, ln.gamma, ln.beta]);
+    assert.ok(r.passed, `梯度不匹配: ${r.report}`);
+  });
+
+  it("可关闭 γ 与 β", () => {
+    const ln = new LayerNorm(3, { gamma: false, beta: false });
+    assert.equal(ln.parameters().length, 0);
+    const x = Tensor.tensor([1, 2, 3], [1, 3]);
+    assert.ok(ln.forward(x).data.some((v) => v !== 0));
+  });
+
+  it("特征维不匹配时报错", () => {
+    const ln = new LayerNorm(4);
+    assert.throws(() => ln.forward(Tensor.tensor([1, 2, 3], [1, 3])), /特征维不匹配/);
+  });
+
+  it("可与 Linear 组合并端到端训练", () => {
+    const model = new Sequential()
+      .add(new Linear(2, 8, { activation: "relu", seed: 1 }))
+      .add(new LayerNorm(8))
+      .add(new Linear(8, 2, { seed: 2 }));
+    const { x, y } = makeXor();
+    const trainer = new Trainer({
+      model, optimizer: new Adam({ lr: 0.05 }),
+      lossFn: crossEntropy, metricFn: accuracy, epochs: 300, batchSize: 4,
+    });
+    const history = trainer.fit(x, x, y);
+    assert.equal(history.at(-1).metric, 1, "XOR 应达 100%");
+  });
+});
+
+describe("Embedding", () => {
+  it("前向按 id 取出对应行", () => {
+    const emb = new Embedding(4, 3, { seed: 1 });
+    const out = emb.forward([2, 0]);
+    const w = emb.weight.data;
+    assert.deepEqual(out.shape, [2, 3]);
+    for (let j = 0; j < 3; j++) {
+      assert.equal(out.data[j], w[2 * 3 + j]);
+      assert.equal(out.data[3 + j], w[j]);
+    }
+  });
+
+  it("权重梯度可通过有限差分校验", () => {
+    const emb = new Embedding(5, 3, { seed: 2 });
+    const loss = () => emb.forward([1, 3, 1]).sum();
+    backward(loss());
+    const r = checkGradient(loss, [emb.weight]);
+    assert.ok(r.passed, `权重梯度不匹配: ${r.report}`);
+  });
+
+  it("重复 id 的梯度必须累加而非覆盖", () => {
+    // id=2 出现三次，三次的梯度应求和；若写成覆盖，只会留下最后一次
+    const emb = new Embedding(4, 2, { seed: 3 });
+    const out = emb.forward([2, 2, 2]);
+    for (let i = 0; i < out.size; i++) out.grad = null;
+    backward(out.sum());
+    const row = 2 * 2;
+    assert.equal(emb.weight.grad[row], 3, "重复词的三份梯度应累加为 3");
+    assert.equal(emb.weight.grad[row + 1], 3);
+    // 未出现的 id 梯度必须为 0
+    assert.equal(emb.weight.grad[0], 0);
+  });
+
+  it("词 id 越界时报错", () => {
+    const emb = new Embedding(3, 2);
+    assert.throws(() => emb.forward([0, 3]), /越界/);
+    assert.throws(() => emb.forward([-1]), /越界/);
+  });
+
+  it("嵌入可随分类器一起训练到收敛", () => {
+    // Embedding 的输入是 id 序列而非张量，因此不能直接塞进 Sequential，
+    // 这里手动组合：查表 → 线性分类 → 更新两组参数。
+    const emb = new Embedding(4, 3, { seed: 4 });
+    const clf = new Linear(3, 2, { seed: 5 });
+    const ids = [0, 1, 2, 3];
+    const labels = Tensor.tensor([0, 1, 0, 1], [4, 1]);
+    const params = [...emb.parameters(), ...clf.parameters()];
+    const opt = new Adam({ lr: 0.1 });
+
+    let loss = null;
+    for (let step = 0; step < 200; step++) {
+      for (const p of params) p.zeroGrad();
+      const logits = clf.forward(emb.forward(ids));
+      loss = crossEntropy(logits, labels);
+      backward(loss);
+      opt.step(params, params.map((p) => p.grad));
+    }
+
+    assert.ok(loss.data[0] < 0.1, `嵌入训练后交叉熵应收敛，实得 ${loss.data[0].toFixed(4)}`);
+    // logits 是连续值，要看的是每行最大分量所在的下标
+    assert.deepEqual(argmaxLast(clf.forward(emb.forward(ids))), [0, 1, 0, 1], "两个类别应被完全分开");
   });
 });
 
