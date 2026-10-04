@@ -34,9 +34,14 @@ jobs:
       - name: 语法检查
         run: |
           for f in src/*.js src/tensor/*.js src/nn/*.js src/optim/*.js \
-                   src/data/*.js test/*.js benchmark/*.js; do
+                   src/data/*.js test/*.js benchmark/*.js examples/*.mjs; do
             node --check "$f"
           done
+
+      - name: 运行入门示例
+        run: |
+          npm run example:autograd
+          npm run example:spiral
 
       - name: 单元测试（含梯度校验）
         # 用自动发现而非 `node --test test/`：目录形式在较新版本上
