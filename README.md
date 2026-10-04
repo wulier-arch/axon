@@ -124,6 +124,8 @@ XOR (4 样本)              100.0%      0.0002          6ms
 
 以上数字来自 `npm run benchmark`，可用同一脚本在你的机器上复现。
 
+与其他 JavaScript 框架的适用边界见 [对比说明](docs/comparison.md)。
+
 ## 已实现
 
 | 类别 | 内容 |
