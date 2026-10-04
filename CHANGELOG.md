@@ -10,22 +10,22 @@
 
 ## [0.2.1] - 2026-10-02
 
-版本目标：把 `v0.2.0` 之后的修复与推广物料纳入正式发布，打通 npm 首发。
+版本目标：补齐演示物料，并打通 npm 首发。
 
 ### 新增
 
-- **在线 Demo**：<https://wulier-arch.github.io/axon/demo/>，无打包步骤，直接 `import` `src/` 源码在浏览器运行
-- **训练动画 GIF**：`docs/demo.gif`，用 axon 自身训练螺旋分类并逐帧记录，展示决策边界收敛全过程
+- **在线 Demo**：<https://wulier-arch.github.io/axon/demo/>，无打包步骤，浏览器直接 `import` `src/` 源码运行
+- **训练动画 GIF**：`docs/demo.gif`（900×472，30 帧），用 axon 自身训练螺旋分类并逐帧记录，展示决策边界从粗糙到完全分离的全过程
 
 ### 修复
 
-见 `0.2.0` 之后的提交历史；本轮修复集中在梯度校验发现的三个静默错误上（`matmul` 权重梯度、优化器缓冲区越界、`mse` 求和维度）。
+- **README 动画在 npm 页面裂图**：`docs/` 不在 `package.json` 的 `files` 中（npm 包仅 16 个源文件），相对路径 `docs/demo.gif` 在 GitHub 上正常，但 npm 按仓库根解析会指向不存在的文件。改用 `raw.githubusercontent.com` 绝对地址，两端均可渲染。
 
 ### 验证
 
-- Node 18 / 20 / 22 / 24 四个版本各 60/60 测试通过
-- `npm pack` 产物零依赖，无测试、Demo、`.github` 等冗余文件
-- 从打包产物安装后运行 README 示例，6/6 通过，0 漏洞
+- Node 18 / 20 / 22 / 24 各 60/60 测试通过；CI 矩阵（18/20/22）与 Pages 部署均为绿色
+- `npm pack` 产物 16 文件 / 24.1 kB，`dependencies` 与 `devDependencies` 均为空
+- 从 `v0.2.1` tag 全新克隆跑测试 60/60；从打包产物全新安装后跑 README 示例 14/14（耗时 0.2s），其中线性回归学到 `w = 2.511`（真值 2.5）、`checkGradient` 最大相对误差 0
 
 ## [0.2.0] - 2026-10-02
 
