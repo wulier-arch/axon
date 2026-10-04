@@ -45,6 +45,7 @@
 ### 修复
 
 - **`add` 广播规则不完整**：缺少 `[m,n] + [n]` 按行广播，导致全连接层加偏置直接报错。改用完整的 numpy 右对齐规则。
+- **优化器缓冲区越界**：`SGD`/`Momentum` 按 `params[0].size` 给所有参数分配动量缓冲区，但权重 `[in,out]` 与偏置 `[out]` 元素数不同，偏置缓冲区过短导致越界写入。`Float64Array` 对越界写入静默忽略，训练会悄悄学错且不报错。改为逐参数按 `p.size` 分配。
 - **`mse` 梯度为 NaN**：`sum` 默认沿最后一维求和，对 `[N,1]` 的回归目标得到 `[N]` 而非标量。损失值正常但梯度全坏，属静默错误。
 - **`Trainer` 未切片回归目标**：lossFn 收到整份数据而非 batch 切片，形状不匹配。
 
@@ -58,7 +59,7 @@
 
 线性回归学到 `w = 2.511`（真值 2.5）、`b = -1.2115`（真值 -1.2）。
 
-性能（Node v24 · arm64）：`matmul` 512×512 达 2.23 GFLOP/s。
+性能（Node v24 · arm64 实测）：`matmul` 512×512 达 2.36 GFLOP/s。
 
 ## [0.1.0] - 2026-10-02
 
@@ -90,5 +91,7 @@
 - 无 GPU 加速，纯 CPU 实现
 - 卷积输入为单样本（`[C,H,W]`），尚不支持批次维度
 
-[未发布]: https://github.com/wulier-arch/axon/compare/v0.1.0...HEAD
+[未发布]: https://github.com/wulier-arch/axon/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/wulier-arch/axon/compare/v0.2.0...v0.2.1
+[0.2.0]: https://github.com/wulier-arch/axon/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/wulier-arch/axon/releases/tag/v0.1.0

@@ -104,13 +104,13 @@ XOR (4 样本)              100.0%      0.0002          6ms
 
 ## 性能
 
-纯 CPU，无 SIMD / 多线程 / WASM（Node v24 · arm64）：
+纯 CPU，无 SIMD / 多线程 / WASM（Node v24 · arm64 实测，数值随机器浮动）：
 
 | 运算 | 吞吐 |
 | --- | --- |
-| `matmul` 512×512 | 2.23 GFLOP/s |
-| `matmul` 1024×1024 | 2.28 GFLOP/s |
-| MLP 784→128→10 单步（batch 32） | 8.0ms |
+| `matmul` 512×512 | 2.36 GFLOP/s |
+| `matmul` 1024×1024 | 2.30 GFLOP/s |
+| MLP 784→128→10 单步（batch 32） | 7.8ms |
 
 坦白说这个数字和 TensorFlow.js 差一个数量级——**这是刻意的**。数据确实存在 `Float64Array` 里，但计算是标量 JS 循环：没有 WASM、没有 SIMD、没有算子融合。换来的是每一行都能读懂。你应该用它学习原理，而不是训 ResNet。
 
