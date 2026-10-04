@@ -131,7 +131,7 @@ XOR (4 样本)              100.0%      0.0002          6ms
 | 数据集 | `makeSpiral` `makeBlobs` `makeXor` `makeLinearRegression` |
 | 验证 | `checkGradient` `numericalGradient` `highOrderGradient` |
 
-共 **51 个导出**，**60 个测试**。
+共 **54 个导出**，**80 个测试**。
 
 ## 设计要点
 
@@ -171,7 +171,7 @@ if (!r.passed) throw new Error(r.report);
 ```bash
 git clone https://github.com/wulier-arch/axon.git
 cd axon
-npm test          # 60 个用例，无需 npm install
+npm test          # 80 个用例，无需 npm install
 npm run benchmark
 ```
 

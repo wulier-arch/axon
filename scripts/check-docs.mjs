@@ -18,7 +18,7 @@
 
 import { readFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { dirname, resolve, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { execFileSync } from "node:child_process";
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -85,41 +85,100 @@ const pkg = JSON.parse(read("package.json"));
   }
 }
 
-/* ------------------------------------------- 4. README 测试徽章 == 实际数量 */
+/* ---------------- 4. README 里的数字（徽章 / 正文测试数 / 导出数）== 实际 */
 
 {
   const readme = read("README.md");
-  const badge = readme.match(/badge\/tests-(\d+)%20passed/);
-  if (!badge) {
-    warnings.push("README.md: 未找到测试数徽章，跳过该项检查");
+
+  // 默认 reporter 输出「ℹ tests N」，spec reporter 输出「# tests N」
+  const parseCount = (s) => {
+    const m = String(s).match(/^(?:ℹ|#) tests (\d+)$/m);
+    return m ? Number(m[1]) : null;
+  };
+
+  let actualTests = null;
+  try {
+    actualTests = parseCount(
+      execFileSync("node", ["--test"], {
+        cwd: ROOT,
+        encoding: "utf-8",
+        stdio: ["ignore", "pipe", "pipe"],
+        timeout: 120000,
+      })
+    );
+  } catch (e) {
+    // 测试失败时 node --test 仍会打印统计，从 stdout 里捞
+    actualTests = parseCount(e.stdout || "");
+  }
+
+  if (actualTests === null) {
+    warnings.push("无法解析实际测试数，跳过测试数比对");
   } else {
-    const claimed = Number(badge[1]);
-    let actual = null;
-    // 默认 reporter 输出「ℹ tests N」，spec reporter 输出「# tests N」
-    const parseCount = (s) => {
-      const m = String(s).match(/^(?:ℹ|#) tests (\d+)$/m);
-      return m ? Number(m[1]) : null;
-    };
-    try {
-      actual = parseCount(
-        execFileSync("node", ["--test"], {
-          cwd: ROOT,
-          encoding: "utf-8",
-          stdio: ["ignore", "pipe", "pipe"],
-          timeout: 120000,
-        })
-      );
-    } catch (e) {
-      // 测试失败时 node --test 仍会打印统计，从 stdout 里捞
-      actual = parseCount(e.stdout || "");
-    }
-    if (actual === null) {
-      warnings.push("无法解析实际测试数，跳过徽章比对");
-    } else if (claimed !== actual) {
+    const badge = readme.match(/badge\/tests-(\d+)%20passed/);
+    if (!badge) {
+      warnings.push("README.md: 未找到测试数徽章，跳过徽章比对");
+    } else if (Number(badge[1]) !== actualTests) {
       errors.push(
-        `README.md: 测试徽章写 ${claimed}，实际 ${actual} —— 徽章是硬编码的，` +
+        `README.md: 测试徽章写 ${badge[1]}，实际 ${actualTests} —— 徽章是硬编码的，` +
           `加/删用例会静默过期`
       );
+    }
+
+    // 正文里的测试数。徽章会记得改，正文常常忘——「60 个测试」曾挂在
+    // 两个位置上，而实际已经是 80。
+    const prosePatterns = [
+      /共 \*\*\d+ 个导出\*\*，\*\*(\d+) 个测试\*\*/g,
+      /npm test\s+#\s*(\d+) 个用例/g,
+    ];
+    let proseHits = 0;
+    for (const re of prosePatterns) {
+      for (const m of readme.matchAll(re)) {
+        proseHits++;
+        if (Number(m[1]) !== actualTests) {
+          errors.push(
+            `README.md: 正文写「${m[0].trim()}」，实际 ${actualTests} 个测试 —— ` +
+              `徽章更新时正文容易漏改`
+          );
+        }
+      }
+    }
+    if (proseHits === 0) {
+      warnings.push("README.md: 正文未找到测试数声明，跳过该项检查");
+    }
+  }
+
+  // 导出数：新增算子后最容易忘记同步的数字
+  const claimedExports = [...readme.matchAll(/共 \*\*(\d+) 个导出\*\*/g)].map(
+    (m) => Number(m[1])
+  );
+  if (claimedExports.length === 0) {
+    warnings.push("README.md: 未找到导出数声明，跳过该项检查");
+  } else {
+    let actualExports = null;
+    try {
+      const entry = pathToFileURL(resolve(ROOT, "src/index.js")).href;
+      const out = execFileSync(
+        process.execPath,
+        ["-e", `import(${JSON.stringify(entry)}).then(m=>console.log(Object.keys(m).length))`],
+        { cwd: ROOT, encoding: "utf-8", stdio: ["ignore", "pipe", "pipe"], timeout: 60000 }
+      );
+      const n = Number(String(out).trim());
+      if (Number.isInteger(n)) actualExports = n;
+    } catch (e) {
+      warnings.push(`无法统计实际导出数：${String(e.message).slice(0, 80)}`);
+    }
+
+    if (actualExports === null) {
+      warnings.push("无法解析实际导出数，跳过导出数比对");
+    } else {
+      for (const claimed of claimedExports) {
+        if (claimed !== actualExports) {
+          errors.push(
+            `README.md: 导出数写 ${claimed}，实际 ${actualExports} —— ` +
+              `新增导出后记得同步这个数字`
+          );
+        }
+      }
     }
   }
 }
