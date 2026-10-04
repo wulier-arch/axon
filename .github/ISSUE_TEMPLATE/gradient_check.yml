@@ -1,0 +1,37 @@
+name: Gradient check issue
+description: Report an analytical gradient that does not match numerical gradients.
+title: "[Gradient]: "
+labels:
+  - bug
+  - help wanted
+body:
+  - type: input
+    id: operator
+    attributes:
+      label: Operator or layer
+      placeholder: matmul, LayerNorm, MultiHeadAttention
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: Include the expression and a minimal `checkGradient` call.
+      render: javascript
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Gradient report
+      description: Paste `checkGradient(...).report`.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: convergence
+    attributes:
+      label: Residual convergence
+      description: For deep expressions, include max relative error at two shrinking epsilon values.
+      render: text
+

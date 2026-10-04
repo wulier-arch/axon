@@ -1,0 +1,55 @@
+name: Bug report
+description: Report incorrect behavior, a failed training run, or a regression.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve axon. Please include a minimal reproduction where possible.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Package version, commit SHA, or release tag.
+      placeholder: v0.3.0
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Node.js
+        - Browser
+        - Node.js and browser
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Paste the smallest code sample that reproduces the problem.
+      render: javascript
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: gradient
+    attributes:
+      label: Gradient information
+      description: If relevant, include `checkGradient(...).report` output.
+      render: text
+
