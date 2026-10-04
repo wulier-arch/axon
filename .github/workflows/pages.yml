@@ -44,6 +44,8 @@ jobs:
         run: |
           mkdir -p _site
           cp site/index.html _site/index.html
+          cp -r site/en _site/en
+          cp site/og.png _site/og.png
           cp -r demo _site/demo
           cp -r src _site/src
           cp package.json README.md LICENSE _site/

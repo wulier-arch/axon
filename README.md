@@ -1,7 +1,12 @@
 # axon
 
+> Zero-dependency neural network framework in JavaScript. Autograd, tensors, convolution,
+> layers, optimizers, and training loops, all written by hand. Browser and Node.js.
+>
 > 零依赖的神经网络框架。从张量运算到自动微分，从层到训练循环，全部手写。
 > 同一份代码在浏览器和 Node.js 里都能跑。
+
+**[Live demo](https://wulier-arch.github.io/axon/) · [English site](https://wulier-arch.github.io/axon/en/) · [★ Star on GitHub](https://github.com/wulier-arch/axon) · [npm](https://www.npmjs.com/package/axon-net)**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-a48aff.svg)](LICENSE)
 [![CI](https://github.com/wulier-arch/axon/actions/workflows/ci.yml/badge.svg)](https://github.com/wulier-arch/axon/actions/workflows/ci.yml)

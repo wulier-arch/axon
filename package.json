@@ -41,7 +41,7 @@
   "bugs": {
     "url": "https://github.com/wulier-arch/axon/issues"
   },
-  "homepage": "https://github.com/wulier-arch/axon#readme",
+  "homepage": "https://wulier-arch.github.io/axon/",
   "engines": {
     "node": ">=18"
   },
