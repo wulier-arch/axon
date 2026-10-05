@@ -7,89 +7,127 @@
     <style>
       :root {
         color-scheme: dark;
-        font-family: ui-sans-serif, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
-        background: #0d0d16;
-        color: #ece8f7;
+        --bg: #070a08;
+        --panel: #0b100d;
+        --line: #29382f;
+        --ink: #e8f1ea;
+        --muted: #91a69a;
+        --dim: #5d7065;
+        --green: #72ff9b;
+        --cyan: #43d9e6;
+        --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+        font-family: "Avenir Next", ui-sans-serif, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: var(--bg);
+        color: var(--ink);
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
-      body { padding: 28px 20px 48px; }
+      body {
+        padding: 28px 20px 48px; line-height: 1.6;
+        background-color: var(--bg);
+        background-image:
+          linear-gradient(#72ff9b08 1px, transparent 1px),
+          linear-gradient(90deg, #72ff9b08 1px, transparent 1px);
+        background-size: 36px 36px;
+      }
 
       .wrap { max-width: 940px; margin: 0 auto; }
 
-      header { margin-bottom: 22px; }
-      h1 { font-size: 26px; font-weight: 800; letter-spacing: -.02em; }
-      .sub { margin-top: 6px; color: #9d96b8; font-size: 14px; }
-      .sub code { background: #ffffff12; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+      header {
+        position: relative; margin-bottom: 18px; padding: 18px 20px 20px;
+        border: 1px solid var(--line); background: #080c0ae8;
+      }
+      header::before {
+        content: "AXN // SPIRAL.CLASSIFIER // LIVE TRAINING";
+        display: block; margin-bottom: 17px; padding-bottom: 9px; border-bottom: 1px solid var(--line);
+        color: var(--green); font: 650 10px/1.3 var(--mono); letter-spacing: .08em;
+      }
+      h1 { font-size: 26px; font-weight: 750; letter-spacing: 0; }
+      .sub { max-width: 760px; margin-top: 8px; color: var(--muted); font-size: 14px; }
+      .sub code {
+        padding: 2px 5px; border: 1px solid var(--line); background: #0c120f;
+        color: #c8f7d6; font: 600 13px/1.4 var(--mono);
+      }
 
       .stage {
         display: grid;
         grid-template-columns: 1fr 300px;
-        gap: 18px;
+        gap: 12px;
         align-items: start;
       }
       @media (max-width: 760px) { .stage { grid-template-columns: 1fr; } }
 
       canvas {
         width: 100%;
-        border-radius: 14px;
-        background: #14141f;
-        border: 1px solid #ffffff14;
+        background: #070b09;
+        border: 1px solid var(--line);
         display: block;
       }
 
       .panel {
-        background: #14141f;
-        border: 1px solid #ffffff14;
-        border-radius: 14px;
-        padding: 16px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 0;
       }
 
-      .stat { display: flex; justify-content: space-between; padding: 5px 0; font-size: 13px; }
-      .stat span:first-child { color: #9d96b8; }
-      .stat span:last-child { font-variant-numeric: tabular-nums; font-weight: 700; }
+      .stat {
+        display: flex; justify-content: space-between; gap: 14px; margin: 0 16px;
+        padding: 10px 0; border-bottom: 1px solid #ffffff0c;
+        color: var(--muted); font: 600 11px/1.4 var(--mono); letter-spacing: .03em;
+      }
+      .stat span:first-child { color: var(--dim); }
+      .stat span:last-child { color: var(--green); font-variant-numeric: tabular-nums; font-weight: 700; }
 
       .bar {
-        height: 6px;
-        border-radius: 3px;
+        height: 4px;
         background: #ffffff10;
         overflow: hidden;
-        margin: 10px 0 4px;
+        margin: 18px 16px 4px;
       }
-      .bar > i { display: block; height: 100%; background: linear-gradient(90deg, #7c5cff, #4ad6c8); transition: width .1s linear; }
+      .bar > i { display: block; height: 100%; background: var(--green); box-shadow: 0 0 9px #72ff9b88; transition: width .1s linear; }
 
-      .controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+      .controls { display: grid; gap: 7px; margin-top: 16px; padding: 0 16px 16px; }
 
       button {
-        padding: 9px 16px;
-        border-radius: 9px;
-        border: 1px solid #ffffff20;
-        background: #ffffff0d;
-        color: #ece8f7;
+        min-height: 40px;
+        padding: 9px 14px;
+        border-radius: 0;
+        border: 1px solid var(--line);
+        background: #0e1511;
+        color: var(--ink);
         font: inherit;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
         transition: background .15s ease;
       }
-      button:hover:not(:disabled) { background: #ffffff1a; }
+      button:hover:not(:disabled) { background: #18221c; border-color: #4d6658; }
       button:disabled { opacity: .4; cursor: not-allowed; }
-      button.primary { background: #7c5cff; border-color: #7c5cff; color: #fff; }
-      button.primary:hover:not(:disabled) { background: #8d70ff; }
+      button.primary { background: var(--green); border-color: var(--green); color: #071009; }
+      button.primary:hover:not(:disabled) { background: #9affb7; border-color: #9affb7; }
 
       .note {
-        margin-top: 20px;
+        margin-top: 14px;
         padding: 12px 14px;
-        border-left: 2px solid #7c5cff;
-        background: #ffffff06;
-        border-radius: 0 8px 8px 0;
+        border: 1px solid var(--line);
+        border-left: 3px solid var(--green);
+        background: var(--panel);
         font-size: 13px;
         line-height: 1.65;
-        color: #b9b2d0;
+        color: var(--muted);
       }
-      .note b { color: #ece8f7; }
+      .note b { color: var(--ink); }
 
-      .legend { display: flex; gap: 16px; font-size: 12px; color: #9d96b8; margin-top: 10px; }
+      .legend {
+        display: flex; flex-wrap: wrap; gap: 12px 16px; margin-top: 10px;
+        color: var(--muted); font: 600 10px/1.4 var(--mono); letter-spacing: .03em;
+      }
       .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; }
+
+      @media (max-width: 480px) {
+        body { padding: 18px 14px 36px; }
+        header { padding: 16px; }
+        h1 { font-size: 23px; }
+      }
     </style>
   </head>
   <body>
