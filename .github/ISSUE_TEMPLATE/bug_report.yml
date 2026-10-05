@@ -13,7 +13,7 @@ body:
     attributes:
       label: Version
       description: Package version, commit SHA, or release tag.
-      placeholder: v0.3.0
+      placeholder: v0.3.1
     validations:
       required: true
   - type: dropdown
@@ -52,4 +52,3 @@ body:
       label: Gradient information
       description: If relevant, include `checkGradient(...).report` output.
       render: text
-

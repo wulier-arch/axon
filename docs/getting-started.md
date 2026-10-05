@@ -5,9 +5,10 @@ This guide gets you from zero to a trained model and a verified gradient.
 ## Install
 
 ```bash
-npm install axon-net
+npm install github:wulier-arch/axon
 ```
 
+The registry package is not published yet, so install directly from GitHub.
 The package has no runtime dependencies. The same source also runs directly in modern browsers.
 
 ## Train a model

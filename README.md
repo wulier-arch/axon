@@ -6,7 +6,7 @@
 > 零依赖的神经网络框架。从张量运算到自动微分，从层到训练循环，全部手写。
 > 同一份代码在浏览器和 Node.js 里都能跑。
 
-**[Live demo](https://wulier-arch.github.io/axon/) · [XOR example](https://wulier-arch.github.io/axon/examples/browser/xor.html) · [Regression example](https://wulier-arch.github.io/axon/examples/browser/linear-regression.html) · [English site](https://wulier-arch.github.io/axon/en/) · [★ Star on GitHub](https://github.com/wulier-arch/axon) · [npm](https://www.npmjs.com/package/axon-net)**
+**[Live demo](https://wulier-arch.github.io/axon/) · [XOR example](https://wulier-arch.github.io/axon/examples/browser/xor.html) · [Regression example](https://wulier-arch.github.io/axon/examples/browser/linear-regression.html) · [English site](https://wulier-arch.github.io/axon/en/) · [★ Star on GitHub](https://github.com/wulier-arch/axon)**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-a48aff.svg)](LICENSE)
 [![CI](https://github.com/wulier-arch/axon/actions/workflows/ci.yml/badge.svg)](https://github.com/wulier-arch/axon/actions/workflows/ci.yml)
@@ -47,7 +47,7 @@ axon 想做的是另一件事：**把这件事摊开给你看**。
 ## 快速开始
 
 ```bash
-npm install axon-net
+npm install github:wulier-arch/axon
 ```
 
 第一次使用可以从 [5 分钟入门指南](docs/getting-started.md)、
@@ -212,7 +212,7 @@ python3 -m http.server 8000
 
 已完成：层与 `Sequential`、优化器、损失函数、训练循环、基准测试（v0.2.0），
 浏览器端 demo（v0.2.1），`LayerNorm`、`Embedding`、`MultiHeadAttention`、
-`TransformerBlock`（v0.3.0），XOR 与线性回归浏览器示例。
+`TransformerBlock`（v0.3.0），XOR 与线性回归浏览器示例（v0.3.1）。
 
 当前阶段目标见 [ROADMAP.md](ROADMAP.md)，工作项见置顶的
 [v0.4.0 roadmap issue](https://github.com/wulier-arch/axon/issues/1)。

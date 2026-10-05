@@ -1,6 +1,6 @@
 # API reference
 
-This reference covers every public export in axon v0.3.0. All APIs are available
+This reference covers every public export in axon v0.3.1. All APIs are available
 from the package root:
 
 ```js
@@ -322,7 +322,7 @@ conv2d(x, weight, bias = null, stride = 1, padding = 0) -> Tensor
 - output: `[outHeight, outWidth, outChannels]`
 
 The implementation uses im2col followed by matrix multiplication. Batched input
-is not supported in v0.3.0.
+is not supported in v0.3.1.
 
 ```js
 import { Tensor, conv2d } from "axon-net";
@@ -488,7 +488,7 @@ new Dropout(p = 0.5, seed = 999)
 ```
 
 Masks elements independently when `p > 0`; `p = 0` returns the input tensor
-unchanged. Backward uses the inverse keep probability. v0.3.0 has no train/eval
+unchanged. Backward uses the inverse keep probability. v0.3.1 has no train/eval
 mode switch, so call this layer only during training or omit it when you need
 deterministic evaluation.
 
