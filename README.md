@@ -10,6 +10,7 @@
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-a48aff.svg)](LICENSE)
 [![CI](https://github.com/wulier-arch/axon/actions/workflows/ci.yml/badge.svg)](https://github.com/wulier-arch/axon/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/wulier-arch/axon?display_name=tag&sort=semver)](https://github.com/wulier-arch/axon/releases/latest)
 [![tests](https://img.shields.io/badge/tests-98%20passed-4ec9a0.svg)](test/)
 [![dependencies](https://img.shields.io/badge/dependencies-0-ff6b6b.svg)](package.json)
 [![node](https://img.shields.io/badge/node-%3E%3D18-5cb85c.svg)](package.json)
