@@ -204,13 +204,25 @@ const pkg = JSON.parse(read("package.json"));
   }
 }
 
-/* --------------------------------------------- 6. README 引用的包名正确 */
+/* ------------------------------- 6. README 安装来源与 package.json 一致 */
 
 {
   const readme = read("README.md");
-  const m = readme.match(/npm install ([a-z0-9@._-]+)/);
-  if (m && m[1] !== pkg.name) {
-    errors.push(`README.md: 安装命令写的是 ${m[1]}，但 package.json 的 name 是 ${pkg.name}`);
+  const m = readme.match(/npm install\s+([^\s`]+)/);
+  if (m) {
+    const spec = m[1];
+    const repoMatch = String(pkg.repository?.url || "").match(
+      /github\.com[/:]([^/]+)\/([^/.#]+)/
+    );
+    const githubSpec = repoMatch
+      ? `github:${repoMatch[1]}/${repoMatch[2]}`
+      : null;
+    if (spec !== pkg.name && spec !== githubSpec) {
+      errors.push(
+        `README.md: 安装命令写的是 ${spec}，但 package.json 的 name 是 ${pkg.name}` +
+          (githubSpec ? `，仓库地址对应 ${githubSpec}` : "")
+      );
+    }
   }
 }
 

@@ -6,15 +6,15 @@ The pinned [v0.4.0 roadmap issue](https://github.com/wulier-arch/axon/issues/1) 
 
 ## Stage 1: foundation
 
-Status: complete in v0.3.0.
+Status: complete through v0.3.1.
 
 - Zero-dependency runtime, browser and Node.js support
 - Reverse-mode autograd, tensors, convolution, layers, losses, optimizers, and training loops
 - `LayerNorm`, `Embedding`, `MultiHeadAttention`, `TransformerBlock`, and `GELU`
 - Finite-difference gradient checks for every operator
-- Browser demo, project site, npm package, CI, and reproducible benchmarks
+- Browser demo, project site, npm-ready package metadata, CI, and reproducible benchmarks
 - Community standards: contributing guide, code of conduct, security policy, issue templates, and pull request template
-- `v0.3.0` GitHub Release and social preview
+- `v0.3.0` and `v0.3.1` GitHub Releases and social preview
 
 ## Stage 2: adoption
 
@@ -25,7 +25,7 @@ Completion criteria:
 - 25 or more authentic GitHub Stars
 - 5 or more external Issues or Discussions
 - 3 or more external pull requests
-- English API reference covering every public export
+- English API reference covering every public export (complete)
 - Browser examples for XOR and regression (complete)
 - Browser attention example (open)
 - At least one reproducible comparison with TensorFlow.js and Brain.js

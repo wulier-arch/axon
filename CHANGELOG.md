@@ -2,12 +2,15 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)（SemVer）。
 
-## [未发布]
+## [0.3.1] - 2026-10-05
 
 ### 新增
 
-v0.3.0 之后的改动集中在「让新人能自己跑起来」与「把取舍讲清楚」，无 API 变更。
+本次改动集中在「让新人能自己跑起来」与「把取舍讲清楚」，无 API 变更。
 
+- **浏览器示例** `examples/browser/`：XOR 分类器与线性回归，直接加载 `src/`
+  源码，不经过打包器；两个页面都提供实时训练状态与可视化
+- **英文 API 参考** `docs/api.md`：覆盖全部 56 个公开导出，并附可运行示例
 - **可运行示例** `examples/`：`autograd.mjs` 演示 `Tensor.variable` / `backward` /
   `checkGradient`，`train-spiral.mjs` 训练两层分类器。零安装，`node examples/*.mjs` 直接跑
 - **入门指南** `docs/getting-started.md`：从克隆到跑通第一个训练循环
@@ -22,9 +25,15 @@ v0.3.0 之后的改动集中在「让新人能自己跑起来」与「把取舍�
 ### 工程化
 
 - CI 增加示例可运行性校验（`npm run example:autograd`、`npm run example:spiral`），
-  防止示例随源码演进而悄悄失效
-- `package.json` 的 `files` 纳入 `examples/` 与 `docs/*.md`，示例随 npm 包一起发布
+  并增加浏览器示例测试，防止示例随源码演进而悄悄失效
+- `package.json` 的 `files` 纳入 `examples/` 与 `docs/*.md`，`npm pack` 产物会包含
+  示例与文档
 - 移除 Dependabot 配置，Actions 版本改为随主版本手动跟进
+
+### 修复
+
+- 首页和入门指南的安装命令改为可直接使用的 GitHub 安装方式，不再指向尚未发布的
+  npm 包
 
 ### 计划中
 
@@ -200,7 +209,7 @@ dx_k = (1/s) · [ γ_k·dy_k − mean(dy⊙γ) − x̂_k·mean(dy⊙γ⊙x̂) ] 
 - 无 GPU 加速，纯 CPU 实现
 - 卷积输入为单样本（`[C,H,W]`），尚不支持批次维度
 
-[未发布]: https://github.com/wulier-arch/axon/compare/v0.3.0...HEAD
+[0.3.1]: https://github.com/wulier-arch/axon/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/wulier-arch/axon/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/wulier-arch/axon/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/wulier-arch/axon/compare/v0.1.0...v0.2.0
