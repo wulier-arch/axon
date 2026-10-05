@@ -14,13 +14,18 @@ import {
 /** 可复现的伪随机数发生器，保证初始化可重复 */
 export function makeRng(seed = 42) {
   let s = seed >>> 0 || 1;
-  return function rng() {
+  const rng = function rng() {
     // xorshift32：周期足够长，统计性质够用
     s ^= s << 13; s >>>= 0;
     s ^= s >> 17;
     s ^= s << 5; s >>>= 0;
     return s / 4294967296;
   };
+  rng.getState = () => s;
+  rng.setState = (state) => {
+    s = Number(state) >>> 0 || 1;
+  };
+  return rng;
 }
 
 /** Box-Muller 变换，把均匀分布转成标准正态 */
@@ -79,6 +84,7 @@ export class Linear {
       activation: this.activation,
       weight: Array.from(this.weight.data),
       bias: this.bias ? Array.from(this.bias.data) : null,
+      name: this.name,
     };
   }
 }
@@ -90,6 +96,7 @@ export class Linear {
 export class Dropout {
   constructor(p = 0.5, seed = 999) {
     this.p = p;
+    this.seed = seed;
     this.rng = makeRng(seed);
     this.name = "dropout";
   }
@@ -114,6 +121,15 @@ export class Dropout {
       };
     }
     return out;
+  }
+
+  toJSON() {
+    return {
+      type: "Dropout",
+      p: this.p,
+      rngState: this.rng.getState(),
+      name: this.name,
+    };
   }
 }
 
@@ -258,6 +274,7 @@ export class LayerNorm {
       eps: this.eps,
       gamma: this.gamma ? Array.from(this.gamma.data) : null,
       beta: this.beta ? Array.from(this.beta.data) : null,
+      name: this.name,
     };
   }
 }
@@ -342,6 +359,7 @@ export class Embedding {
       vocabSize: this.vocabSize,
       features: this.features,
       weight: Array.from(this.weight.data),
+      name: this.name,
     };
   }
 }
@@ -453,6 +471,7 @@ export class MultiHeadAttention {
       wk: Array.from(this.wk.data),
       wv: Array.from(this.wv.data),
       wo: Array.from(this.wo.data),
+      name: this.name,
     };
   }
 }
@@ -547,6 +566,12 @@ export class TransformerBlock {
       normFirst: this.normFirst,
       activation: this.activation,
       causal: this.attn.causal,
+      norm1: this.norm1.toJSON(),
+      attn: this.attn.toJSON(),
+      norm2: this.norm2.toJSON(),
+      ff1: this.ff1.toJSON(),
+      ff2: this.ff2.toJSON(),
+      name: this.name,
     };
   }
 }

@@ -10,6 +10,7 @@ export {
   makeRng, activations,
 } from "./nn/layers.js";
 export { Sequential } from "./nn/sequential.js";
+export { loadModel } from "./nn/serialization.js";
 export { mse, crossEntropy, binaryCrossEntropy, accuracy } from "./loss.js";
 export { SGD, Momentum, Adam, AdamW, RMSProp, Scheduler } from "./optim/optimizers.js";
 export { Trainer } from "./trainer.js";

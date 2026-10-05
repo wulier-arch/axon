@@ -10,7 +10,12 @@
 
 - **浏览器示例** `examples/browser/`：XOR 分类器与线性回归，直接加载 `src/`
   源码，不经过打包器；两个页面都提供实时训练状态与可视化
-- **英文 API 参考** `docs/api.md`：覆盖全部 56 个公开导出，并附可运行示例
+- **模型序列化**：`Sequential.toJSON()` 输出 `{ format, version, type, layers }`
+  存档，`loadModel()` 从对象或 JSON 字符串还原；层名、权重与 `Dropout` 的
+  随机数状态都会保留。加载前校验格式标记、版本、维度与权重长度，不使用
+  `eval`，只实例化白名单内的已知层。`TransformerBlock` 递归保存
+  `norm1/attn/norm2/ff1/ff2`，无法序列化的层会明确报错而非被静默丢弃
+- **英文 API 参考** `docs/api.md`：覆盖全部 57 个公开导出，并附可运行示例
 - **可运行示例** `examples/`：`autograd.mjs` 演示 `Tensor.variable` / `backward` /
   `checkGradient`，`train-spiral.mjs` 训练两层分类器。零安装，`node examples/*.mjs` 直接跑
 - **入门指南** `docs/getting-started.md`：从克隆到跑通第一个训练循环
@@ -37,8 +42,7 @@
 
 ### 计划中
 
-见 [README 路线图](README.md#路线图)：BPE 分词器、BatchNorm、模型序列化（JSON）、
-`conv2d` 批次维度。
+见 [README 路线图](README.md#路线图)：BPE 分词器、BatchNorm、`conv2d` 批次维度。
 
 层与 `Sequential`、优化器、损失函数、训练循环、基准测试已于 v0.2.0 发布，
 浏览器端 demo 已于 v0.2.1 发布；`LayerNorm`、`Embedding`、`MultiHeadAttention`
