@@ -26,7 +26,8 @@ Completion criteria:
 - 5 or more external Issues or Discussions
 - 3 or more external pull requests
 - English API reference covering every public export
-- Browser examples for XOR, regression, and attention
+- Browser examples for XOR and regression (complete)
+- Browser attention example (open)
 - At least one reproducible comparison with TensorFlow.js and Brain.js
 - A tagged release with no failing CI checks
 
@@ -56,4 +57,3 @@ Completion criteria:
 - Chasing raw throughput at the cost of readability
 - Adding dependencies when the implementation can remain small and understandable
 - Buying or exchanging Stars, artificial engagement, or unverified usage claims
-

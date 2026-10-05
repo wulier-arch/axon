@@ -6,11 +6,11 @@
 > 零依赖的神经网络框架。从张量运算到自动微分，从层到训练循环，全部手写。
 > 同一份代码在浏览器和 Node.js 里都能跑。
 
-**[Live demo](https://wulier-arch.github.io/axon/) · [English site](https://wulier-arch.github.io/axon/en/) · [★ Star on GitHub](https://github.com/wulier-arch/axon) · [npm](https://www.npmjs.com/package/axon-net)**
+**[Live demo](https://wulier-arch.github.io/axon/) · [XOR example](https://wulier-arch.github.io/axon/examples/browser/xor.html) · [Regression example](https://wulier-arch.github.io/axon/examples/browser/linear-regression.html) · [English site](https://wulier-arch.github.io/axon/en/) · [★ Star on GitHub](https://github.com/wulier-arch/axon) · [npm](https://www.npmjs.com/package/axon-net)**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-a48aff.svg)](LICENSE)
 [![CI](https://github.com/wulier-arch/axon/actions/workflows/ci.yml/badge.svg)](https://github.com/wulier-arch/axon/actions/workflows/ci.yml)
-[![tests](https://img.shields.io/badge/tests-95%20passed-4ec9a0.svg)](test/)
+[![tests](https://img.shields.io/badge/tests-98%20passed-4ec9a0.svg)](test/)
 [![dependencies](https://img.shields.io/badge/dependencies-0-ff6b6b.svg)](package.json)
 [![node](https://img.shields.io/badge/node-%3E%3D18-5cb85c.svg)](package.json)
 
@@ -28,6 +28,10 @@ XOR          100.0% 准确率      高斯簇       100.0% 准确率
 上面这段动画是用 axon 本身跑出来的：两层 ReLU 网络 + Adam，220 个 epoch 后损失 0.02、准确率 100%，全程零依赖。画面里红色的点是分错类的样本——早期它们很多，随训练推进逐渐归零。
 
 在浏览器里看神经网络学习：决策边界随着训练推进从斑驳逐渐变干净。**整个 demo 没有打包步骤**——它直接 `import` 了 `src/` 里的框架源码，这在浏览器里就能跑，本身就是零依赖设计目标的证明。
+
+如果想从更小的例子开始，可以打开两个无需安装、无需打包器的交互示例：
+[XOR 分类器](https://wulier-arch.github.io/axon/examples/browser/xor.html) 和
+[线性回归](https://wulier-arch.github.io/axon/examples/browser/linear-regression.html)。
 
 ## 为什么做这个
 
@@ -47,7 +51,8 @@ npm install axon-net
 ```
 
 第一次使用可以从 [5 分钟入门指南](docs/getting-started.md)、
-[完整 API 参考](docs/api.md) 和 [可运行示例](examples/) 开始。
+[完整 API 参考](docs/api.md)、[Node 示例](examples/) 和
+[浏览器示例](https://wulier-arch.github.io/axon/examples/browser/xor.html) 开始。
 
 也可以不用安装，直接克隆——本项目零依赖，`src/` 就是全部：
 
@@ -142,7 +147,7 @@ XOR (4 样本)              100.0%      0.0002          6ms
 | 数据集 | `makeSpiral` `makeBlobs` `makeXor` `makeLinearRegression` |
 | 验证 | `checkGradient` `numericalGradient` `highOrderGradient` |
 
-共 **56 个导出**，**95 个测试**。
+共 **56 个导出**，**98 个测试**。
 
 ## 设计要点
 
@@ -185,7 +190,7 @@ if (!r.passed) throw new Error(r.report);
 ```bash
 git clone https://github.com/wulier-arch/axon.git
 cd axon
-npm test          # 95 个用例，无需 npm install
+npm test          # 98 个用例，无需 npm install
 npm run benchmark
 ```
 
@@ -198,13 +203,16 @@ demo 用了 ES Module，需要经 HTTP 打开（`file://` 会被 CORS 拦截）�
 ```bash
 python3 -m http.server 8000
 # 访问 http://localhost:8000/demo/
+# 浏览器示例：
+# http://localhost:8000/examples/browser/xor.html
+# http://localhost:8000/examples/browser/linear-regression.html
 ```
 
 ## 路线图
 
 已完成：层与 `Sequential`、优化器、损失函数、训练循环、基准测试（v0.2.0），
 浏览器端 demo（v0.2.1），`LayerNorm`、`Embedding`、`MultiHeadAttention`、
-`TransformerBlock`（v0.3.0）。
+`TransformerBlock`（v0.3.0），XOR 与线性回归浏览器示例。
 
 当前阶段目标见 [ROADMAP.md](ROADMAP.md)，工作项见置顶的
 [v0.4.0 roadmap issue](https://github.com/wulier-arch/axon/issues/1)。

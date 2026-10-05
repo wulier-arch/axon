@@ -148,7 +148,7 @@
         <div class="chips">
           <span class="chip ok">0 dependencies</span>
           <span class="chip hi">56 exports</span>
-          <span class="chip">95 tests</span>
+          <span class="chip">98 tests</span>
           <span class="chip">MIT</span>
           <span class="chip">Node ≥ 18</span>
         </div>
@@ -215,6 +215,7 @@
         <p>Or clone the repository. There are no dependencies, and <code>src/</code> is the complete library.</p>
         <pre>git clone https://github.com/wulier-arch/axon.git
 <span class="k">cd</span> axon &amp;&amp; npm test</pre>
+        <p>For smaller training examples, open the <a href="./examples/browser/xor.html">XOR classifier</a> or <a href="./examples/browser/linear-regression.html">linear regression</a>. Both pages load <code>src/</code> directly without a bundler.</p>
         <p>Train a neural network in <strong>11 lines</strong>:</p>
         <pre><span class="k">import</span> { Linear, Sequential, Adam, Trainer, crossEntropy, accuracy, makeSpiral } <span class="k">from</span> <span class="s">"axon-net"</span>;
 
@@ -262,7 +263,7 @@ console.log(trainer.history.at(-1));
 
       <section>
         <h2><span class="num">07</span>Roadmap</h2>
-        <p class="lede">Shipped: layers and <code>Sequential</code>, optimizers, losses, and training loops (v0.2.0); browser demo (v0.2.1); <code>LayerNorm</code>, <code>Embedding</code>, <code>MultiHeadAttention</code>, and <code>TransformerBlock</code> (v0.3.0).</p>
+        <p class="lede">Shipped: layers and <code>Sequential</code>, optimizers, losses, and training loops (v0.2.0); browser demo (v0.2.1); <code>LayerNorm</code>, <code>Embedding</code>, <code>MultiHeadAttention</code>, and <code>TransformerBlock</code> (v0.3.0); XOR and linear-regression browser examples.</p>
         <ul class="tick">
           <li>BPE tokenizer</li>
           <li>BatchNorm</li>
@@ -281,7 +282,8 @@ console.log(trainer.history.at(-1));
           <a href="https://github.com/wulier-arch/axon/blob/main/README.md">README</a> ·
           <a href="https://github.com/wulier-arch/axon/blob/main/docs/api.md">API reference</a> ·
           <a href="https://github.com/wulier-arch/axon/blob/main/CHANGELOG.md">Changelog</a> ·
-          <a href="../demo/">Live demo</a>
+          <a href="../demo/">Live demo</a> ·
+          <a href="../examples/browser/xor.html">Browser examples</a>
         </span>
       </footer>
 

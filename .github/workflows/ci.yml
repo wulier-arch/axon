@@ -34,7 +34,8 @@ jobs:
       - name: 语法检查
         run: |
           for f in src/*.js src/tensor/*.js src/nn/*.js src/optim/*.js \
-                   src/data/*.js test/*.js benchmark/*.js examples/*.mjs; do
+                   src/data/*.js test/*.js benchmark/*.js examples/*.mjs \
+                   examples/browser/*.js; do
             node --check "$f"
           done
 

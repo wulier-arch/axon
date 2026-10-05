@@ -156,7 +156,7 @@
         <div class="chips">
           <span class="chip ok">0 依赖</span>
           <span class="chip hi">56 个导出</span>
-          <span class="chip">95 个测试</span>
+          <span class="chip">98 个测试</span>
           <span class="chip">MIT</span>
           <span class="chip">Node ≥ 18</span>
         </div>
@@ -225,6 +225,7 @@
         <p>也可以不用安装，直接克隆——本项目零依赖，<code>src/</code> 就是全部：</p>
         <pre>git clone https://github.com/wulier-arch/axon.git
 <span class="k">cd</span> axon &amp;&amp; npm test</pre>
+        <p>想看更小的浏览器训练例子，可以直接打开 <a href="./examples/browser/xor.html">XOR 分类器</a> 和 <a href="./examples/browser/linear-regression.html">线性回归</a>。两个页面都直接加载 <code>src/</code>，不经过打包器。</p>
         <p>训练一个神经网络，<strong>11 行</strong>：</p>
         <pre><span class="k">import</span> { Linear, Sequential, Adam, Trainer, crossEntropy, accuracy, makeSpiral } <span class="k">from</span> <span class="s">"axon-net"</span>;
 
@@ -272,7 +273,7 @@ console.log(trainer.history.at(-1));
 
       <section>
         <h2><span class="num">07</span>路线图</h2>
-        <p class="lede">已完成：层与 <code>Sequential</code>、优化器、损失函数、训练循环、基准测试（v0.2.0），浏览器端 demo（v0.2.1），<code>LayerNorm</code>、<code>Embedding</code>、<code>MultiHeadAttention</code>、<code>TransformerBlock</code>（v0.3.0）。</p>
+        <p class="lede">已完成：层与 <code>Sequential</code>、优化器、损失函数、训练循环、基准测试（v0.2.0），浏览器端 demo（v0.2.1），<code>LayerNorm</code>、<code>Embedding</code>、<code>MultiHeadAttention</code>、<code>TransformerBlock</code>（v0.3.0），XOR 与线性回归浏览器示例。</p>
         <ul class="tick">
           <li>BPE 分词器</li>
           <li>BatchNorm</li>
@@ -291,7 +292,8 @@ console.log(trainer.history.at(-1));
           <a href="https://github.com/wulier-arch/axon/blob/main/README.md">README</a> ·
           <a href="https://github.com/wulier-arch/axon/blob/main/docs/api.md">API 参考</a> ·
           <a href="https://github.com/wulier-arch/axon/blob/main/CHANGELOG.md">更新日志</a> ·
-          <a href="./demo/">在线 Demo</a>
+          <a href="./demo/">在线 Demo</a> ·
+          <a href="./examples/browser/xor.html">浏览器示例</a>
         </span>
       </footer>
 

@@ -81,8 +81,23 @@ node examples/autograd.mjs
 node examples/train-spiral.mjs
 ```
 
+## Run the browser examples
+
+The browser examples import the framework source directly. They need no install step,
+bundler, or backend:
+
+- [XOR classifier](https://wulier-arch.github.io/axon/examples/browser/xor.html)
+- [Linear regression](https://wulier-arch.github.io/axon/examples/browser/linear-regression.html)
+
+From a local clone, serve the repository root and open either page:
+
+```bash
+python3 -m http.server 8000
+```
+
 ## Next steps
 
 - Open the browser demo: https://wulier-arch.github.io/axon/demo/
+- Try the browser examples: https://wulier-arch.github.io/axon/examples/browser/xor.html
 - Read the [English API reference](api.md)
 - Pick a task from the pinned roadmap issue: https://github.com/wulier-arch/axon/issues/1
