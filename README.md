@@ -46,8 +46,8 @@ axon 想做的是另一件事：**把这件事摊开给你看**。
 npm install axon-net
 ```
 
-第一次使用可以从 [5 分钟入门指南](docs/getting-started.md) 和
-[可运行示例](examples/) 开始。
+第一次使用可以从 [5 分钟入门指南](docs/getting-started.md)、
+[完整 API 参考](docs/api.md) 和 [可运行示例](examples/) 开始。
 
 也可以不用安装，直接克隆——本项目零依赖，`src/` 就是全部：
 

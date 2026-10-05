@@ -84,6 +84,5 @@ node examples/train-spiral.mjs
 ## Next steps
 
 - Open the browser demo: https://wulier-arch.github.io/axon/demo/
-- Read the API design notes in the README
+- Read the [English API reference](api.md)
 - Pick a task from the pinned roadmap issue: https://github.com/wulier-arch/axon/issues/1
-

@@ -214,7 +214,28 @@ const pkg = JSON.parse(read("package.json"));
   }
 }
 
-/* ------------------------------------------------------- 7. npm 包体积上限 */
+/* ------------------------------------------------ 7. 英文 API 文档覆盖导出 */
+
+{
+  let api;
+  try {
+    api = await import(pathToFileURL(resolve(ROOT, "src/index.js")).href);
+  } catch (e) {
+    errors.push(`无法加载 src/index.js 以检查 API 文档：${String(e.message).slice(0, 120)}`);
+  }
+
+  if (api) {
+    const apiText = read("docs/api.md");
+    const missing = Object.keys(api).filter(
+      (name) => !apiText.includes(`\`${name}\``)
+    );
+    if (missing.length) {
+      errors.push(`docs/api.md: 缺少公开导出的 API 文档 —— ${missing.join(", ")}`);
+    }
+  }
+}
+
+/* ------------------------------------------------------- 8. npm 包体积上限 */
 
 {
   const MAX_FILES = 30;
