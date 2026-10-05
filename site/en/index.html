@@ -260,7 +260,7 @@
         <div class="hero-head">
           <span>AXN // CORE 0.3.1</span>
           <span class="head-mid">BROWSER + NODE // SINGLE SOURCE</span>
-          <span class="sys-state"><i></i>SELF-TEST 108/108 PASS</span>
+          <span class="sys-state"><i></i>SELF-TEST 114/114 PASS</span>
         </div>
         <div class="hero-body">
           <div class="hero-copy">
@@ -377,7 +377,7 @@ console.log(trainer.history.at(-1));
         <div class="grid">
           <div class="card">
             <h3>Tensors and convolution</h3>
-            <p>Arithmetic, <code>matmul</code>, <code>softmax</code>, <code>reshape</code>, N-dimensional <code>transpose</code>, <code>conv2d</code> via im2col + GEMM, and pooling.</p>
+            <p>Arithmetic, <code>matmul</code>, <code>softmax</code>, <code>reshape</code>, N-dimensional <code>transpose</code>, single-image and batched <code>conv2d</code> via im2col + GEMM, and pooling.</p>
           </div>
           <div class="card">
             <h3>Reverse-mode autograd</h3>
@@ -396,11 +396,10 @@ console.log(trainer.history.at(-1));
 
       <section>
         <h2><span class="num">07</span>Roadmap</h2>
-        <p class="lede">Shipped: layers and <code>Sequential</code>, optimizers, losses, and training loops (v0.2.0); browser demo (v0.2.1); <code>LayerNorm</code>, <code>Embedding</code>, <code>MultiHeadAttention</code>, and <code>TransformerBlock</code> (v0.3.0); XOR and linear-regression browser examples plus JSON model serialization and loading (v0.3.1).</p>
+        <p class="lede">Shipped: layers and <code>Sequential</code>, optimizers, losses, and training loops (v0.2.0); browser demo (v0.2.1); <code>LayerNorm</code>, <code>Embedding</code>, <code>MultiHeadAttention</code>, and <code>TransformerBlock</code> (v0.3.0); XOR and linear-regression browser examples plus JSON model serialization and loading (v0.3.1). Batched <code>conv2d</code> is complete with 114 passing tests and will ship in the next version.</p>
         <ul class="tick">
           <li>BPE tokenizer</li>
           <li>BatchNorm</li>
-          <li>Batched <code>conv2d</code></li>
         </ul>
         <div class="note">
           <b>Contributing:</b> new operators must include finite-difference gradient tests. That is the project's quality floor.

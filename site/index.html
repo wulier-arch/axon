@@ -268,7 +268,7 @@
         <div class="hero-head">
           <span>AXN // CORE 0.3.1</span>
           <span class="head-mid">BROWSER + NODE // SINGLE SOURCE</span>
-          <span class="sys-state"><i></i>SELF-TEST 108/108 PASS</span>
+          <span class="sys-state"><i></i>SELF-TEST 114/114 PASS</span>
         </div>
         <div class="hero-body">
           <div class="hero-copy">
@@ -387,7 +387,7 @@ console.log(trainer.history.at(-1));
         <div class="grid">
           <div class="card">
             <h3>张量与卷积</h3>
-            <p>加减乘除、<code>matmul</code>、<code>softmax</code>、<code>reshape</code>、<code>transpose</code>（N 维轴置换）、<code>conv2d</code>（im2col + GEMM）、池化。</p>
+            <p>加减乘除、<code>matmul</code>、<code>softmax</code>、<code>reshape</code>、<code>transpose</code>（N 维轴置换）、<code>conv2d</code>（单图与批次，im2col + GEMM）、池化。</p>
           </div>
           <div class="card">
             <h3>自动微分</h3>
@@ -406,11 +406,10 @@ console.log(trainer.history.at(-1));
 
       <section>
         <h2><span class="num">07</span>路线图</h2>
-        <p class="lede">已完成：层与 <code>Sequential</code>、优化器、损失函数、训练循环、基准测试（v0.2.0），浏览器端 demo（v0.2.1），<code>LayerNorm</code>、<code>Embedding</code>、<code>MultiHeadAttention</code>、<code>TransformerBlock</code>（v0.3.0），XOR 与线性回归浏览器示例、模型 JSON 序列化与加载（v0.3.1）。</p>
+        <p class="lede">已完成：层与 <code>Sequential</code>、优化器、损失函数、训练循环、基准测试（v0.2.0），浏览器端 demo（v0.2.1），<code>LayerNorm</code>、<code>Embedding</code>、<code>MultiHeadAttention</code>、<code>TransformerBlock</code>（v0.3.0），XOR 与线性回归浏览器示例、模型 JSON 序列化与加载（v0.3.1）；<code>conv2d</code> 批次维度已完成并通过 114 项测试，待随下个版本发布。</p>
         <ul class="tick">
           <li>BPE 分词器</li>
           <li>BatchNorm</li>
-          <li><code>conv2d</code> 支持批次维度</li>
         </ul>
         <div class="note">
           <b>参与贡献：</b>如果你实现了新算子，请务必附上梯度校验用例——这是本项目唯一的质量底线。
