@@ -11,7 +11,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-a48aff.svg)](LICENSE)
 [![CI](https://github.com/wulier-arch/axon/actions/workflows/ci.yml/badge.svg)](https://github.com/wulier-arch/axon/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/wulier-arch/axon?display_name=tag&sort=semver)](https://github.com/wulier-arch/axon/releases/latest)
-[![tests](https://img.shields.io/badge/tests-98%20passed-4ec9a0.svg)](test/)
+[![tests](https://img.shields.io/badge/tests-108%20passed-4ec9a0.svg)](test/)
 [![dependencies](https://img.shields.io/badge/dependencies-0-ff6b6b.svg)](package.json)
 [![node](https://img.shields.io/badge/node-%3E%3D18-5cb85c.svg)](package.json)
 
@@ -143,6 +143,7 @@ XOR (4 样本)              100.0%      0.0002          6ms
 | 卷积 | `conv2d`（im2col + GEMM）`maxPool2d` `avgPool2d` |
 | 自动微分 | `backward` `collectLeaves` `zeroGrad` |
 | 层 | `Linear`（He 初始化）`Dropout` `LayerNorm` `Embedding` `MultiHeadAttention` `TransformerBlock` `Sequential` |
+| 序列化 | `Sequential.toJSON()` `loadModel`（JSON 存档 / 加载） |
 | 激活 | `relu` `tanh` `sigmoid` `softmax` `gelu` |
 | 损失 | `crossEntropy` `mse` `binaryCrossEntropy` `accuracy` |
 | 优化器 | `SGD` `Momentum` `Adam` `AdamW` `RMSProp` `Scheduler` |
@@ -150,7 +151,7 @@ XOR (4 样本)              100.0%      0.0002          6ms
 | 数据集 | `makeSpiral` `makeBlobs` `makeXor` `makeLinearRegression` |
 | 验证 | `checkGradient` `numericalGradient` `highOrderGradient` |
 
-共 **56 个导出**，**98 个测试**。
+共 **57 个导出**，**108 个测试**。
 
 ## 设计要点
 
@@ -193,7 +194,7 @@ if (!r.passed) throw new Error(r.report);
 ```bash
 git clone https://github.com/wulier-arch/axon.git
 cd axon
-npm test          # 98 个用例，无需 npm install
+npm test          # 108 个用例，无需 npm install
 npm run benchmark
 ```
 
@@ -215,14 +216,14 @@ python3 -m http.server 8000
 
 已完成：层与 `Sequential`、优化器、损失函数、训练循环、基准测试（v0.2.0），
 浏览器端 demo（v0.2.1），`LayerNorm`、`Embedding`、`MultiHeadAttention`、
-`TransformerBlock`（v0.3.0），XOR 与线性回归浏览器示例（v0.3.1）。
+`TransformerBlock`（v0.3.0），XOR 与线性回归浏览器示例、模型 JSON
+序列化与加载（v0.3.1）。
 
 当前阶段目标见 [ROADMAP.md](ROADMAP.md)，工作项见置顶的
 [v0.4.0 roadmap issue](https://github.com/wulier-arch/axon/issues/1)。
 
 - [ ] BPE 分词器
 - [ ] BatchNorm
-- [ ] 模型序列化（JSON）
 - [ ] `conv2d` 支持批次维度
 
 ## 参与贡献

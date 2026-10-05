@@ -39,8 +39,17 @@ export class Sequential {
 
   toJSON() {
     return {
+      format: "axon-model",
+      version: 1,
       type: "Sequential",
-      layers: this.layers.filter((l) => typeof l.toJSON === "function").map((l) => l.toJSON()),
+      layers: this.layers.map((layer, index) => {
+        if (typeof layer?.toJSON !== "function") {
+          throw new Error(
+            `Sequential.toJSON: layer ${index} (${layer?.name || "unnamed"}) does not implement toJSON()`
+          );
+        }
+        return layer.toJSON();
+      }),
     };
   }
 }

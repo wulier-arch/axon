@@ -492,7 +492,7 @@ unchanged. Backward uses the inverse keep probability. v0.3.1 has no train/eval
 mode switch, so call this layer only during training or omit it when you need
 deterministic evaluation.
 
-Methods: `forward(x)`.
+Methods: `forward(x)` and `toJSON()`.
 
 ### `LayerNorm`
 
@@ -611,6 +611,47 @@ const trainer = new Trainer({
 trainer.fit(x, y, y);
 console.log(trainer.history.at(-1));
 ```
+
+### `loadModel`
+
+```js
+loadModel(serialized) -> Sequential
+```
+
+Rebuilds a model from a plain object produced by `Sequential.toJSON()`, or from
+the equivalent JSON string. The reconstructed model has the same layers, the
+same weights, and, for `Dropout` layers, the same random-number state, so
+training continues from the exact point where it was serialized.
+
+```js
+import { loadModel, makeSpiral, Sequential } from "axon-net";
+
+const { x, y } = makeSpiral({ samples: 120 });
+const model = new Sequential()
+  .add(new Linear(2, 16, { activation: "relu", seed: 1 }))
+  .add(new Linear(16, 2, { seed: 2 }));
+
+// ... train the model ...
+
+const snapshot = JSON.stringify(model.toJSON());
+const restored = loadModel(snapshot);
+
+console.log(restored.summary());
+console.log(restored.countParams());
+```
+
+The payload is validated before any layer is built: the format marker
+(`"axon-model"`), the version, and the shape of every layer entry must be
+consistent, and every weight must be a finite number of the exact expected
+length. A mismatch throws with a message naming the offending path. Loading
+never calls `eval` and only constructs the known layer types, so untrusted JSON
+cannot introduce arbitrary code or unexpected prototypes.
+
+Round-tripping works for `Linear`, `Dropout`, `LayerNorm`, `Embedding`,
+`MultiHeadAttention`, `TransformerBlock`, and nested `Sequential` models.
+`TransformerBlock.toJSON()` stores `norm1`, `attn`, `norm2`, `ff1`, and `ff2`
+recursively, so no weights are dropped. `Sequential.toJSON()` throws if a layer
+does not implement `toJSON()` rather than silently omitting it.
 
 ### `activations`
 
