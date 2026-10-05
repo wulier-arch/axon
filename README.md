@@ -11,7 +11,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-a48aff.svg)](LICENSE)
 [![CI](https://github.com/wulier-arch/axon/actions/workflows/ci.yml/badge.svg)](https://github.com/wulier-arch/axon/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/wulier-arch/axon?display_name=tag&sort=semver)](https://github.com/wulier-arch/axon/releases/latest)
-[![tests](https://img.shields.io/badge/tests-108%20passed-4ec9a0.svg)](test/)
+[![tests](https://img.shields.io/badge/tests-114%20passed-4ec9a0.svg)](test/)
 [![dependencies](https://img.shields.io/badge/dependencies-0-ff6b6b.svg)](package.json)
 [![node](https://img.shields.io/badge/node-%3E%3D18-5cb85c.svg)](package.json)
 
@@ -151,7 +151,7 @@ XOR (4 样本)              100.0%      0.0002          6ms
 | 数据集 | `makeSpiral` `makeBlobs` `makeXor` `makeLinearRegression` |
 | 验证 | `checkGradient` `numericalGradient` `highOrderGradient` |
 
-共 **57 个导出**，**108 个测试**。
+共 **57 个导出**，**114 个测试**。
 
 ## 设计要点
 
@@ -194,7 +194,7 @@ if (!r.passed) throw new Error(r.report);
 ```bash
 git clone https://github.com/wulier-arch/axon.git
 cd axon
-npm test          # 108 个用例，无需 npm install
+npm test          # 114 个用例，无需 npm install
 npm run benchmark
 ```
 
@@ -224,7 +224,7 @@ python3 -m http.server 8000
 
 - [ ] BPE 分词器
 - [ ] BatchNorm
-- [ ] `conv2d` 支持批次维度
+- [x] `conv2d` 支持批次维度
 
 ## 参与贡献
 

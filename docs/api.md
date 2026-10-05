@@ -312,17 +312,19 @@ an argmax.
 conv2d(x, weight, bias = null, stride = 1, padding = 0) -> Tensor
 ```
 
-2D convolution for one image and a channels-last output:
+2D convolution for a single image or a batch, with channels-last output:
 
-- `x`: `[C, H, W]`
+- `x`: `[C, H, W]` or `[N, C, H, W]`
 - `weight`: `[outChannels, C, kernelHeight, kernelWidth]`
 - `bias`: optional `[outChannels]`
 - `stride`: a number or `[strideHeight, strideWidth]`
 - `padding`: a number or `[paddingHeight, paddingWidth]`
-- output: `[outHeight, outWidth, outChannels]`
+- output: `[outHeight, outWidth, outChannels]` or
+  `[N, outHeight, outWidth, outChannels]`
 
 The implementation uses im2col followed by matrix multiplication. Batched input
-is not supported in v0.3.1.
+shares the same weight and bias across all `N` images. Gradients are accumulated
+across the batch for the weight and bias.
 
 ```js
 import { Tensor, conv2d } from "axon-net";
