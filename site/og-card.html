@@ -5,28 +5,30 @@
     <style>
       :root {
         font-family: "Avenir Next", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        color: #e8f1ea;
-        background: #070a08;
-        --line: #2b3c32;
-        --muted: #91a69a;
-        --dim: #5d7065;
-        --green: #72ff9b;
+        color: #edf2f6;
+        background: #0c1015;
+        --line: #2d3843;
+        --muted: #94a3b0;
+        --dim: #66757f;
+        --accent: #f0a93a;
+        --accent-soft: #ffd489;
+        --green: #56e08f;
         --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       html, body { width: 1200px; height: 630px; overflow: hidden; }
       body {
         background:
-          linear-gradient(#72ff9b08 1px, transparent 1px) 0 0 / 36px 36px,
-          linear-gradient(90deg, #72ff9b08 1px, transparent 1px) 0 0 / 36px 36px,
-          linear-gradient(135deg, #0b110e 0%, #070a08 52%, #0a0f0c 100%);
+          linear-gradient(#f0a93a0a 1px, transparent 1px) 0 0 / 36px 36px,
+          linear-gradient(90deg, #f0a93a0a 1px, transparent 1px) 0 0 / 36px 36px,
+          linear-gradient(135deg, #131a22 0%, #0c1015 52%, #0f141a 100%);
       }
       .card { width: 1200px; height: 630px; padding: 28px; }
       .panel {
         position: relative;
         height: 574px;
         border: 1px solid var(--line);
-        background: #080c0ae8;
+        background: #0d1218e8;
         box-shadow: inset 0 0 0 1px #000, 0 28px 90px #00000088;
       }
       .panel::before, .panel::after {
@@ -38,16 +40,17 @@
       .panel::before {
         top: -1px;
         left: -1px;
-        border-top: 2px solid var(--green);
-        border-left: 2px solid var(--green);
+        border-top: 2px solid var(--accent);
+        border-left: 2px solid var(--accent);
       }
       .panel::after {
         right: -1px;
         bottom: -1px;
-        border-right: 2px solid var(--green);
-        border-bottom: 2px solid var(--green);
+        border-right: 2px solid var(--accent);
+        border-bottom: 2px solid var(--accent);
       }
       .topline {
+        position: relative;
         height: 38px;
         padding: 0 15px;
         border-bottom: 1px solid var(--line);
@@ -58,6 +61,15 @@
         font: 650 11px/1 var(--mono);
         letter-spacing: .1em;
         text-transform: uppercase;
+      }
+      .topline::after {
+        content: "";
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -1px;
+        height: 2px;
+        background: repeating-linear-gradient(90deg, #f0a93a59 0 12px, transparent 12px 26px);
       }
       .status {
         display: inline-flex;
@@ -81,17 +93,17 @@
         border-right: 1px solid var(--line);
       }
       .eyebrow {
-        color: var(--green);
+        color: var(--accent);
         font: 700 11px/1.4 var(--mono);
         letter-spacing: .13em;
         text-transform: uppercase;
       }
       h1 {
         margin-top: 22px;
-        color: #e8f1ea;
+        color: #edf2f6;
         font: 800 88px/.82 var(--mono);
         letter-spacing: 0;
-        text-shadow: 0 0 38px #72ff9b24;
+        text-shadow: 0 0 38px #f0a93a26;
       }
       h2 {
         max-width: 580px;
@@ -115,14 +127,14 @@
       .spec {
         padding: 7px 9px;
         border: 1px solid var(--line);
-        background: #0d130f;
+        background: #111720;
         color: var(--muted);
         font: 700 10px/1 var(--mono);
         letter-spacing: .05em;
       }
       .spec.ok {
-        color: var(--green);
-        border-color: #72ff9b55;
+        color: var(--accent);
+        border-color: #f0a93a55;
       }
       .url {
         margin-top: 29px;
@@ -132,7 +144,7 @@
       }
       .bay {
         padding: 26px 25px;
-        background: #0a0f0c;
+        background: #0f141a;
       }
       .bay-title {
         margin-bottom: 12px;
@@ -144,7 +156,7 @@
       .preview {
         padding: 8px;
         border: 1px solid var(--line);
-        background: #060907;
+        background: #0a0e12;
       }
       .preview-frame {
         height: 26px;
@@ -164,7 +176,7 @@
         width: 476px;
         height: 248px;
         object-fit: cover;
-        background: #080c0a;
+        background: #0d1218;
       }
       .readout {
         margin-top: 16px;
@@ -190,7 +202,7 @@
         display: block;
         height: 100%;
         background: var(--green);
-        box-shadow: 0 0 9px #72ff9b88;
+        box-shadow: 0 0 9px #56e08f88;
       }
       .row em {
         color: var(--green);

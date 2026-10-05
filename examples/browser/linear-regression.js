@@ -182,7 +182,7 @@ function drawRegression(canvas, runtime, result) {
   context.beginPath();
   context.moveTo(toX(bounds.minimumX), toY(result.weight * bounds.minimumX + result.bias));
   context.lineTo(toX(bounds.maximumX), toY(result.weight * bounds.maximumX + result.bias));
-  context.strokeStyle = "#4ad6c8";
+  context.strokeStyle = "#7fd3e6";
   context.lineWidth = 3;
   context.stroke();
 }

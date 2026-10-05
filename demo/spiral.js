@@ -29,7 +29,7 @@ const TOTAL_EPOCHS = 220;
 const GRID = 48;              // 决策边界的采样密度
 
 const COLORS = [
-  [255, 107, 139],           // 类别 A：粉
+  [240, 169, 58],            // 类别 A：琥珀
   [74, 214, 200],            // 类别 B：青
 ];
 
@@ -46,7 +46,7 @@ function buildModel() {
 const model = buildModel();
 el.params.textContent = String(model.countParams());
 
-const optimizer = new Adam({ lr: 0.02 });
+const optimizer = new Adam({ lr: 0.0575 });
 let params = model.parameters();
 
 /** 跑一轮全量训练，返回损失 */

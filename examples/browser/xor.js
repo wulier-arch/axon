@@ -10,7 +10,7 @@ import {
   softmax,
 } from "../../src/index.js";
 
-const COLORS = ["#ff6b8b", "#4ad6c8"];
+const COLORS = ["#f0a93a", "#7fd3e6"];
 const GRID_SIZE = 48;
 const INPUT_MIN = -0.24;
 const INPUT_MAX = 1.24;
@@ -134,7 +134,7 @@ function drawXor(canvas, runtime, grid, predictions) {
 
     context.beginPath();
     context.arc(x, y, correct ? 9 : 11, 0, Math.PI * 2);
-    context.fillStyle = correct ? color : "#ff4d4d";
+    context.fillStyle = correct ? color : "#ff6f61";
     context.fill();
     context.lineWidth = 3;
     context.strokeStyle = "#0d1017";
