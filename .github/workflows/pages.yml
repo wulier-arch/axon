@@ -1,10 +1,11 @@
-name: Deploy demo to GitHub Pages
+name: Deploy site and examples to GitHub Pages
 
 on:
   push:
     branches: [main]
     paths:
       - "demo/**"
+      - "examples/**"
       - "src/**"
       - "site/**"
       - "package.json"
@@ -22,7 +23,7 @@ concurrency:
 
 jobs:
   deploy:
-    name: 部署 demo
+    name: 部署站点与示例
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -34,8 +35,8 @@ jobs:
         id: pages
         uses: actions/configure-pages@v6
 
-      # 只发布站点页、demo 与 src：demo 通过 ../src/ 直接引用框架源码，
-      # 不做打包，这也正是 axon 零依赖设计目标的体现。
+      # 只发布站点页、demo、浏览器示例与 src：demo 和示例都直接引用
+      # 框架源码，不做打包，这也正是 axon 零依赖设计目标的体现。
       #
       # site/index.html 必须落到 _site 根目录，否则
       # https://wulier-arch.github.io/axon/ 会因为没有 index.html 而 404
@@ -48,6 +49,8 @@ jobs:
           cp site/og.png _site/og.png
           cp -r demo _site/demo
           cp -r src _site/src
+          mkdir -p _site/examples/browser
+          cp examples/browser/* _site/examples/browser/
           cp package.json README.md LICENSE _site/
 
       - name: 上传静态站点

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Fit a linear regression model directly in the browser with axon.">
+    <title>axon browser example - Linear regression</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="page-header">
+        <div>
+          <p class="eyebrow">axon browser example</p>
+          <h1>Linear regression</h1>
+          <p class="lead">
+            A one-neuron model learns a noisy line in the browser using only the framework
+            source in <code>src/</code>. The dashed line is the target; the bright line is learned.
+          </p>
+        </div>
+        <nav class="nav" aria-label="Browser examples">
+          <a href="./xor.html">XOR</a>
+          <a href="./linear-regression.html" aria-current="page">Linear regression</a>
+          <a href="https://github.com/wulier-arch/axon">GitHub</a>
+        </nav>
+      </header>
+
+      <section class="layout">
+        <div class="card canvas-card">
+          <canvas id="view" width="640" height="440" aria-label="Regression data, target line, and learned line"></canvas>
+          <div class="legend">
+            <span><i class="dot" style="background:#77a7ff"></i>Training samples</span>
+            <span style="color:#e7b85b"><i class="line dashed"></i>Target</span>
+            <span style="color:#4ad6c8"><i class="line"></i>Learned</span>
+          </div>
+        </div>
+
+        <aside class="card panel">
+          <div class="metric"><span>Epoch</span><span id="epoch">0 / 400</span></div>
+          <div class="metric"><span>MSE</span><span id="loss">-</span></div>
+          <div class="metric"><span>Learned w</span><span id="weight">-</span></div>
+          <div class="metric"><span>Learned b</span><span id="bias">-</span></div>
+          <div class="metric"><span>Target w, b</span><span id="target">2.500, -1.200</span></div>
+          <div class="metric"><span>Speed</span><span id="speed">-</span></div>
+
+          <div class="progress" aria-hidden="true"><i id="progress"></i></div>
+
+          <div class="controls">
+            <button id="start" class="primary" type="button">Start training</button>
+            <button id="pause" type="button" disabled>Pause</button>
+            <button id="reset" type="button">Reset</button>
+          </div>
+        </aside>
+      </section>
+
+      <p class="note">
+        <strong>The target is y = 2.5x - 1.2</strong> with Gaussian-like noise.
+        The model starts without those values and recovers them from gradient updates alone.
+      </p>
+    </main>
+
+    <script type="module" src="./linear-regression.js"></script>
+  </body>
+</html>
