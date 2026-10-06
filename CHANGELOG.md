@@ -205,6 +205,8 @@ dx_k = (1/s) · [ γ_k·dy_k − mean(dy⊙γ) − x̂_k·mean(dy⊙γ⊙x̂) ] 
 
 首个可用的核心版本：自动微分 + 张量运算 + 卷积，全部通过梯度校验。
 
+> 该版本当时未单独打标签，下列链接指向声明 `0.1.0` 的提交 `3d00b0a`。
+
 ### 新增
 
 - **Tensor 类**：`Float64Array` 存储，支持任意维；`variable()` 创建叶子，`tensor()` 创建常数
@@ -235,5 +237,5 @@ dx_k = (1/s) · [ γ_k·dy_k − mean(dy⊙γ) − x̂_k·mean(dy⊙γ⊙x̂) ] 
 [0.3.1]: https://github.com/wulier-arch/axon/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/wulier-arch/axon/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/wulier-arch/axon/compare/v0.2.0...v0.2.1
-[0.2.0]: https://github.com/wulier-arch/axon/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/wulier-arch/axon/releases/tag/v0.1.0
+[0.2.0]: https://github.com/wulier-arch/axon/compare/3d00b0a...v0.2.0
+[0.1.0]: https://github.com/wulier-arch/axon/commit/3d00b0a
