@@ -28,6 +28,8 @@ const warnings = [];
 
 const read = (p) => readFileSync(resolve(ROOT, p), "utf-8");
 const pkg = JSON.parse(read("package.json"));
+let actualTests = null;
+let actualExports = null;
 
 /* ---------------------------------------------------------------- 1. 零依赖 */
 
@@ -96,7 +98,6 @@ const pkg = JSON.parse(read("package.json"));
     return m ? Number(m[1]) : null;
   };
 
-  let actualTests = null;
   try {
     actualTests = parseCount(
       execFileSync("node", ["--test"], {
@@ -154,7 +155,6 @@ const pkg = JSON.parse(read("package.json"));
   if (claimedExports.length === 0) {
     warnings.push("README.md: 未找到导出数声明，跳过该项检查");
   } else {
-    let actualExports = null;
     try {
       const entry = pathToFileURL(resolve(ROOT, "src/index.js")).href;
       const out = execFileSync(
@@ -286,6 +286,52 @@ const pkg = JSON.parse(read("package.json"));
       warnings.push(`npm 包解压后 ${kb.toFixed(0)} kB，超过上限 ${MAX_KB} kB`);
     }
     if (files === 0) errors.push("npm pack 未产出任何文件");
+  }
+}
+
+/* ------------------------- 9. 官网首页的产品数字与仓库事实一致 */
+
+{
+  for (const file of ["site/index.html", "site/en/index.html"]) {
+    const text = read(file);
+
+    const versions = [
+      ...text.matchAll(/AXN(?:\s*\/\/\s*CORE|\s*-\s*CORE)\s+(\d+\.\d+\.\d+)/g),
+    ].map((m) => m[1]);
+    if (!versions.includes(pkg.version)) {
+      errors.push(
+        `${file}: 页面版本写 ${versions.join(", ") || "（未找到）"}，` +
+          `package.json 是 ${pkg.version} —— 发布新版本时首页容易漏改`
+      );
+    }
+
+    const selfTests = [
+      ...text.matchAll(/SELF-TEST\s+(\d+)\/(\d+)\s+PASS/g),
+    ];
+    if (selfTests.length === 0) {
+      warnings.push(`${file}: 未找到 SELF-TEST 声明，跳过测试数比对`);
+    } else if (actualTests !== null) {
+      for (const [, passed, total] of selfTests) {
+        if (Number(passed) !== actualTests || Number(total) !== actualTests) {
+          errors.push(
+            `${file}: SELF-TEST 写 ${passed}/${total}，实际 ${actualTests} 个测试 —— ` +
+              `首页状态栏需要随测试数同步`
+          );
+        }
+      }
+    }
+
+    const exportsMatch = text.match(
+      /<span>EXPORTS<\/span>[\s\S]*?<em>(\d+)<\/em>/
+    );
+    if (!exportsMatch) {
+      warnings.push(`${file}: 未找到 EXPORTS 数量，跳过导出数比对`);
+    } else if (actualExports !== null && Number(exportsMatch[1]) !== actualExports) {
+      errors.push(
+        `${file}: EXPORTS 写 ${exportsMatch[1]}，实际 ${actualExports} —— ` +
+          `新增公开导出后首页容易漏改`
+      );
+    }
   }
 }
 
