@@ -216,8 +216,8 @@ python3 -m http.server 8000
 
 已完成：层与 `Sequential`、优化器、损失函数、训练循环、基准测试（v0.2.0），
 浏览器端 demo（v0.2.1），`LayerNorm`、`Embedding`、`MultiHeadAttention`、
-`TransformerBlock`（v0.3.0），XOR 与线性回归浏览器示例、模型 JSON
-序列化与加载（v0.3.1）。
+`TransformerBlock`（v0.3.0），XOR 与线性回归浏览器示例（v0.3.1）；
+模型 JSON 序列化与加载、`conv2d` 批次维度已完成，待随下个版本发布。
 
 当前阶段目标见 [ROADMAP.md](ROADMAP.md)，工作项见置顶的
 [v0.4.0 roadmap issue](https://github.com/wulier-arch/axon/issues/1)。
