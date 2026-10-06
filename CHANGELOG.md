@@ -20,6 +20,12 @@
 - 英文 API 参考更新为覆盖全部 57 个公开导出
 - README 补上最新 Release 徽章与 Bilibili 讲解视频链接
 
+### 工程化
+
+- `check:docs` 的核查范围从 README 扩展到官网首页，校验页面上的版本号、
+  `SELF-TEST` 自检数与 `EXPORTS` 导出数是否与仓库实际一致，发布新版本时
+  首页漏改会被 CI 直接拦下
+
 ### 计划中
 
 见 [README 路线图](README.md#路线图)：BPE 分词器、BatchNorm。
