@@ -2,6 +2,28 @@
 
 本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/)（SemVer）。
 
+## [未发布]
+
+### 新增
+
+- **模型序列化**：`Sequential.toJSON()` 输出 `{ format, version, type, layers }`
+  存档，`loadModel()` 从对象或 JSON 字符串还原；层名、权重与 `Dropout` 的
+  随机数状态都会保留。加载前校验格式标记、版本、维度与权重长度，不使用
+  `eval`，只实例化白名单内的已知层。`TransformerBlock` 递归保存
+  `norm1/attn/norm2/ff1/ff2`，无法序列化的层会明确报错而非被静默丢弃
+- **`conv2d` 批次维度**：`conv2d` 支持在批次维上并行，`im2col + GEMM` 路径
+  同步适配，避免逐样本串行调用
+
+### 文档与站点
+
+- 站点、demo 与预览图改版为 test-bench 视觉系统，社交预览卡同步到当前测试数
+- 英文 API 参考更新为覆盖全部 57 个公开导出
+- README 补上最新 Release 徽章与 Bilibili 讲解视频链接
+
+### 计划中
+
+见 [README 路线图](README.md#路线图)：BPE 分词器、BatchNorm。
+
 ## [0.3.1] - 2026-10-05
 
 ### 新增
@@ -10,12 +32,7 @@
 
 - **浏览器示例** `examples/browser/`：XOR 分类器与线性回归，直接加载 `src/`
   源码，不经过打包器；两个页面都提供实时训练状态与可视化
-- **模型序列化**：`Sequential.toJSON()` 输出 `{ format, version, type, layers }`
-  存档，`loadModel()` 从对象或 JSON 字符串还原；层名、权重与 `Dropout` 的
-  随机数状态都会保留。加载前校验格式标记、版本、维度与权重长度，不使用
-  `eval`，只实例化白名单内的已知层。`TransformerBlock` 递归保存
-  `norm1/attn/norm2/ff1/ff2`，无法序列化的层会明确报错而非被静默丢弃
-- **英文 API 参考** `docs/api.md`：覆盖全部 57 个公开导出，并附可运行示例
+- **英文 API 参考** `docs/api.md`：覆盖全部 56 个公开导出，并附可运行示例
 - **可运行示例** `examples/`：`autograd.mjs` 演示 `Tensor.variable` / `backward` /
   `checkGradient`，`train-spiral.mjs` 训练两层分类器。零安装，`node examples/*.mjs` 直接跑
 - **入门指南** `docs/getting-started.md`：从克隆到跑通第一个训练循环
@@ -42,7 +59,8 @@
 
 ### 计划中
 
-见 [README 路线图](README.md#路线图)：BPE 分词器、BatchNorm、`conv2d` 批次维度。
+见 [README 路线图](README.md#路线图)：BPE 分词器、BatchNorm、模型序列化（JSON）、
+`conv2d` 批次维度。
 
 层与 `Sequential`、优化器、损失函数、训练循环、基准测试已于 v0.2.0 发布，
 浏览器端 demo 已于 v0.2.1 发布；`LayerNorm`、`Embedding`、`MultiHeadAttention`
@@ -213,6 +231,7 @@ dx_k = (1/s) · [ γ_k·dy_k − mean(dy⊙γ) − x̂_k·mean(dy⊙γ⊙x̂) ] 
 - 无 GPU 加速，纯 CPU 实现
 - 卷积输入为单样本（`[C,H,W]`），尚不支持批次维度
 
+[未发布]: https://github.com/wulier-arch/axon/compare/v0.3.1...HEAD
 [0.3.1]: https://github.com/wulier-arch/axon/compare/v0.3.0...v0.3.1
 [0.3.0]: https://github.com/wulier-arch/axon/compare/v0.2.1...v0.3.0
 [0.2.1]: https://github.com/wulier-arch/axon/compare/v0.2.0...v0.2.1
