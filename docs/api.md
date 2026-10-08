@@ -1,7 +1,7 @@
 # API reference
 
-This reference covers every public export in axon v0.3.1. All APIs are available
-from the package root:
+This reference covers every public export in axon. `loadModel` is not yet in a
+tagged release. All APIs are available from the package root:
 
 ```js
 import {
