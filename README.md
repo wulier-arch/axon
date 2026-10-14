@@ -138,17 +138,18 @@ XOR (4 样本)              100.0%      0.0002          6ms
 
 | 类别 | 内容 |
 | --- | --- |
-| 张量 | `Tensor` `add` `sub` `mul` `div` `scale` `matmul` `softmax` `relu` `tanh` `sigmoid` `exp` `log` `sum` `mean` `reshape` `transpose` |
+| 张量 | `Tensor` `add` `sub` `mul` `div` `scale` `matmul` `softmax` `relu` `tanh` `sigmoid` `exp` `log` `sum` `mean` `reshape` `transpose` `numElements` `swap` |
 | 采样 | `gatherRows` `concat` `argmaxLast` |
 | 卷积 | `conv2d`（im2col + GEMM）`maxPool2d` `avgPool2d` |
 | 自动微分 | `backward` `collectLeaves` `zeroGrad` |
 | 层 | `Linear`（He 初始化）`Dropout` `LayerNorm` `Embedding` `MultiHeadAttention` `TransformerBlock` `Sequential` |
 | 序列化 | `Sequential.toJSON()` `loadModel`（JSON 存档 / 加载） |
-| 激活 | `relu` `tanh` `sigmoid` `softmax` `gelu` |
+| 激活 | `relu` `tanh` `sigmoid` `softmax` `gelu` `activations` |
 | 损失 | `crossEntropy` `mse` `binaryCrossEntropy` `accuracy` |
 | 优化器 | `SGD` `Momentum` `Adam` `AdamW` `RMSProp` `Scheduler` |
 | 训练 | `Trainer`（batch / epoch / 早停 / 历史） |
 | 数据集 | `makeSpiral` `makeBlobs` `makeXor` `makeLinearRegression` |
+| 随机 | `makeRng`（可复现的 xorshift32） |
 | 验证 | `checkGradient` `numericalGradient` `highOrderGradient` |
 
 共 **57 个导出**，**114 个测试**。
