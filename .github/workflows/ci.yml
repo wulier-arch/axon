@@ -32,10 +32,12 @@ jobs:
           node-version: ${{ matrix.node }}
 
       - name: 语法检查
+        # demo/spiral.js 是在线 demo 的模块，浏览器示例已有测试覆盖逻辑层，
+        # demo 没有——语法错误会让线上 demo 悄悄失效，只能靠这一步拦住。
         run: |
           for f in src/*.js src/tensor/*.js src/nn/*.js src/optim/*.js \
                    src/data/*.js test/*.js benchmark/*.js examples/*.mjs \
-                   examples/browser/*.js; do
+                   examples/browser/*.js demo/*.js; do
             node --check "$f"
           done
 
