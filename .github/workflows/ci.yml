@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         # 18 是最低要求，同时覆盖仍在广泛使用的 LTS 与当前版本
-        node: ['18', '20', '22', '24']
+        node: ['18', '20', '22', '24', '26']
     steps:
       - name: 检出代码
         uses: actions/checkout@v7
