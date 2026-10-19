@@ -183,6 +183,51 @@ let actualExports = null;
   }
 }
 
+/* ----------- 4b. README「已实现」表格必须列全公开导出（双向核对） */
+
+{
+  // 数字对得上不代表清单对得上：曾出现「共 57 个导出」写对了，
+  // 但下面的「已实现」表格只列了 53 个，漏掉的 4 个谁也发现不了。
+  // 数字检查盯的是汇总，这里盯的是明细。
+  const readme = read("README.md");
+  const start = readme.indexOf("## 已实现");
+  if (start === -1) {
+    warnings.push("README.md: 未找到「已实现」章节，跳过表格核对");
+  } else {
+    const rest = readme.slice(start + "## 已实现".length);
+    const nextHeading = rest.search(/^## /m);
+    const section = nextHeading === -1 ? rest : rest.slice(0, nextHeading);
+    // 排除 `Sequential.toJSON()` 这类「对象.方法」里的方法名
+    const listed = new Set(
+      [...section.matchAll(/(?<!\.)`([A-Za-z_][A-Za-z0-9_]*)`/g)].map((m) => m[1])
+    );
+
+    let names = null;
+    try {
+      const api = await import(pathToFileURL(resolve(ROOT, "src/index.js")).href);
+      names = Object.keys(api);
+    } catch (e) {
+      warnings.push(`无法加载 src/index.js 以核对「已实现」表格：${String(e.message).slice(0, 80)}`);
+    }
+
+    if (names) {
+      const missing = names.filter((n) => !listed.has(n));
+      if (missing.length) {
+        errors.push(
+          `README.md「已实现」表格漏列 ${missing.length} 个公开导出 —— ${missing.join(", ")}` +
+            `（汇总数字对得上，明细却少列了，读者会以为没有这些 API）`
+        );
+      }
+      const extra = [...listed].filter((n) => !names.includes(n));
+      if (extra.length) {
+        warnings.push(
+          `README.md「已实现」表格列了非公开导出 —— ${extra.join(", ")}，确认是否为笔误`
+        );
+      }
+    }
+  }
+}
+
 /* --------------------------------- 5. 已作废的技术表述（曾导致可信度受损） */
 
 {
