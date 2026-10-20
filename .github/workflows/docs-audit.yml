@@ -34,9 +34,17 @@ jobs:
           node-version: '22'
 
       - name: 文档事实核查
-        # 检查项：零依赖声明、Markdown 相对链接可达、CHANGELOG 版本
-        # 条目与链接引用完整、README 测试徽章与实际用例数一致、
-        # 已作废的技术表述、README 包名、npm 包体积上限。
+        # 检查项（编号对应 scripts/check-docs.mjs 的分段注释）：
+        #   1. 零依赖声明
+        #   2. Markdown 相对链接可达
+        #   3. CHANGELOG 版本条目与链接引用完整
+        #   4. README 徽章 / 正文测试数 / 导出数 == 实际
+        #   4b. README「已实现」表格列全公开导出（双向核对）
+        #   5. 已作废的技术表述
+        #   6. README 安装来源与 package.json 一致
+        #   7. 英文 API 文档覆盖全部公开导出
+        #   8. npm 包体积上限
+        #   9. 官网首页（中英）的版本号 / SELF-TEST / EXPORTS 与仓库一致
         run: node scripts/check-docs.mjs
 
       - name: 测试文件结构自检
