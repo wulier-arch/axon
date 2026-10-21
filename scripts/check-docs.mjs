@@ -380,6 +380,54 @@ let actualExports = null;
   }
 }
 
+/* ------------ 10. 官网页面的相对链接在 Pages 部署布局下可达 */
+
+{
+  // .github/workflows/pages.yml 把 site/index.html 铺到 _site 根、site/en 铺到
+  // _site/en/，再把 demo/、src/、examples/browser/ 等拷到根。于是 URL 路径
+  // /axon/xxx 对应的仓库文件是：en/** → site/en/**，index.html → site/index.html，
+  // og.png → site/og.png，其余 → 仓库根同名路径。
+  //
+  // 起因：英文站正文曾把示例链接写成相对当前页的 ./examples/...，发布在
+  // /axon/en/ 下会解析成 /axon/en/examples/... 而 404，页脚却是 ../examples/，
+  // 两处不一致。第 9 段只核对版本号 / SELF-TEST / EXPORTS，链接坏了照样全绿。
+  const toRepoPath = (urlPath) => {
+    if (urlPath.startsWith("/en/")) return `site/en/${urlPath.slice(4)}`;
+    if (urlPath === "/index.html") return "site/index.html";
+    if (urlPath === "/og.png") return "site/og.png";
+    return urlPath.slice(1);
+  };
+
+  const pages = [
+    ["site/index.html", "https://site.invalid/"],
+    ["site/en/index.html", "https://site.invalid/en/"],
+  ];
+
+  let checkedLinks = 0;
+  for (const [file, base] of pages) {
+    const text = read(file);
+    const re = /(?:href|src)="([^"]+)"/g;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      const target = m[1];
+      if (/^(https?:|mailto:|data:|javascript:|#)/.test(target)) continue;
+      let urlPath = decodeURIComponent(new URL(target, base).pathname);
+      if (urlPath.endsWith("/")) urlPath += "index.html";
+      const repoPath = toRepoPath(urlPath);
+      checkedLinks++;
+      if (!existsSync(join(ROOT, repoPath))) {
+        errors.push(
+          `${file}: 相对链接 ${target} 在 Pages 布局下解析为 ${urlPath}，` +
+            `对应仓库文件 ${repoPath} 不存在 —— 部署后是 404`
+        );
+      }
+    }
+  }
+  if (checkedLinks === 0) {
+    warnings.push("官网页面未找到任何相对链接，请确认正则是否失效");
+  }
+}
+
 /* --------------------------------------------------------------- 输出汇总 */
 
 for (const w of warnings) console.log(`⚠️  ${w}`);

@@ -45,6 +45,7 @@ jobs:
         #   7. 英文 API 文档覆盖全部公开导出
         #   8. npm 包体积上限
         #   9. 官网首页（中英）的版本号 / SELF-TEST / EXPORTS 与仓库一致
+        #  10. 官网页面的相对链接在 Pages 布局下可达（防部署后 404）
         run: node scripts/check-docs.mjs
 
       - name: 测试文件结构自检
