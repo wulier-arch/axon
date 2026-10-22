@@ -50,6 +50,9 @@
   `examples/` 里的文档同样在 GitHub 上渲染，链接断了就是 404，而第 2 段只扫根目录的
   `*.md`，这些文档的链接坏了 CI 照样全绿；同时把相对链接改为按所在文件目录解析，
   `docs/x.md` 里的 `../src/foo.js` 不再被误当成仓库根路径
+- `check:docs` 补上社交预览卡模板 `site/og-card.html` 的数字核查（第 9b 段）：
+  它是 `site/og.png` 的源模板，而 og.png 会被发布并作为两个官网首页的 `og:image`，
+  但版本号、`SELF-TEST`、`EXPORTS` 与读数区的测试数此前都不在任何检查范围内
 
 ### 计划中
 
