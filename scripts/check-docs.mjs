@@ -47,7 +47,18 @@ let actualExports = null;
 /* ------------------------------------------------- 2. Markdown 相对链接可达 */
 
 {
-  const mdFiles = readdirSync(ROOT).filter((f) => f.endsWith(".md"));
+  // 递归收集全部 Markdown。docs/ 与 examples/ 里的文档同样在 GitHub 上渲染，
+  // 链接断了就是 404；早期只扫仓库根目录，docs/ 里的链接坏了 CI 照样全绿。
+  const mdFiles = [];
+  (function walk(dir) {
+    for (const entry of readdirSync(join(ROOT, dir), { withFileTypes: true })) {
+      if (entry.name === "node_modules" || entry.name === ".git") continue;
+      const rel = dir ? `${dir}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) walk(rel);
+      else if (entry.name.endsWith(".md")) mdFiles.push(rel);
+    }
+  })("");
+
   let checked = 0;
   for (const file of mdFiles) {
     const text = read(file);
@@ -60,12 +71,19 @@ let actualExports = null;
       const path = target.split("#")[0];
       if (!path) continue;
       checked++;
-      if (!existsSync(join(ROOT, path))) {
+      // 相对链接是相对「当前文件所在目录」解析的，不是仓库根目录：
+      // docs/finite-difference-gradient-checks.md 里的 ../src/gradient-check.js
+      // 指的是仓库根的 src/gradient-check.js。
+      const resolved = join(dirname(file), path);
+      if (!existsSync(join(ROOT, resolved))) {
         errors.push(`${file}: 相对链接指向不存在的文件 —— ${target}`);
       }
     }
   }
   if (checked === 0) warnings.push("未找到任何相对链接，请确认正则是否失效");
+  if (!mdFiles.some((f) => f.startsWith("docs/"))) {
+    warnings.push("遍历结果里没有 docs/ 下的 Markdown，请确认递归是否失效");
+  }
 }
 
 /* ------------------------------- 3. CHANGELOG 版本标题必须有链接引用定义 */

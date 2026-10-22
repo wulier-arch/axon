@@ -36,7 +36,7 @@ jobs:
       - name: 文档事实核查
         # 检查项（编号对应 scripts/check-docs.mjs 的分段注释）：
         #   1. 零依赖声明
-        #   2. Markdown 相对链接可达
+        #   2. Markdown 相对链接可达（递归含 docs/、examples/ 等子目录）
         #   3. CHANGELOG 版本条目与链接引用完整
         #   4. README 徽章 / 正文测试数 / 导出数 == 实际
         #   4b. README「已实现」表格列全公开导出（双向核对）
