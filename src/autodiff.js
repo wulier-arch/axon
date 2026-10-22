@@ -12,8 +12,10 @@ export function backward(root) {
     throw new Error("backward: 目标张量既未建图也未开启 requiresGrad");
   }
   if (!root.grad) {
-    // 约定：标量损失反向时上游梯度为 1
-    root.grad = Float64Array.of(1);
+    // 约定：标量损失反向时上游梯度为 1。
+    // 非标量根节点（如 sum 沿维度求和后的向量）按「对全部元素求和」的语义种全 1；
+    // 早先这里固定只种 1 个元素，其余位置是 undefined，传播出去就是 NaN。
+    root.grad = new Float64Array(root.size).fill(1);
   }
 
   const topo = [];
