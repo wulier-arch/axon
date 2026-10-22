@@ -52,7 +52,9 @@ let actualExports = null;
   const mdFiles = [];
   (function walk(dir) {
     for (const entry of readdirSync(join(ROOT, dir), { withFileTypes: true })) {
-      if (entry.name === "node_modules" || entry.name === ".git") continue;
+      // 以 . 开头的目录一律跳过：.git、外部 Agent 工具落盘的 .workbuddy-ai/ 等
+      // 都不是本仓库的内容，扫进去只会把别人的临时文件报成我们的死链接。
+      if (entry.name.startsWith(".") || entry.name === "node_modules") continue;
       const rel = dir ? `${dir}/${entry.name}` : entry.name;
       if (entry.isDirectory()) walk(rel);
       else if (entry.name.endsWith(".md")) mdFiles.push(rel);

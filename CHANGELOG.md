@@ -14,6 +14,13 @@
 - **`conv2d` 批次维度**：`conv2d` 支持在批次维上并行，`im2col + GEMM` 路径
   同步适配，避免逐样本串行调用
 
+### 修复
+
+- **`check-docs` 不再扫点目录**：外部 Agent 工具（WorkBuddy 等）会在项目根目录
+  落盘 `.workbuddy-ai/memory/*.md`，其中指向别处的相对链接被误报成本仓库的
+  死链接，`npm run check:docs` 因此常驻 2 个错误；递归收集 Markdown 时跳过所有
+  以 `.` 开头的目录，本地开发环境与 CI 看到的事实一致
+
 ### 文档与站点
 
 - 站点、demo 与预览图改版为 test-bench 视觉系统，社交预览卡同步到当前测试数
