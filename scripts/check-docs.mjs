@@ -398,6 +398,60 @@ let actualExports = null;
   }
 }
 
+/* ------------------ 9b. 社交预览卡模板的数字与仓库事实一致 */
+
+{
+  // site/og-card.html 是 site/og.png 的源模板（1200×630，人工截图导出）。og.png 会被
+  // 发布并作为两个官网首页的 og:image，模板里的数字一旦漂移，重新出图就是错的——
+  // 而第 9 段只核对两个官网首页，这张卡一直是盲区。
+  const file = "site/og-card.html";
+  const text = read(file);
+
+  const versions = [
+    ...text.matchAll(/AXN\s*\/\/\s*CORE\s+(\d+\.\d+\.\d+)/g),
+  ].map((m) => m[1]);
+  if (!versions.includes(pkg.version)) {
+    errors.push(
+      `${file}: 版本写 ${versions.join(", ") || "（未找到）"}，` +
+        `package.json 是 ${pkg.version} —— 预览卡模板容易漏改`
+    );
+  }
+
+  const selfTests = [...text.matchAll(/SELF-TEST\s+(\d+)\/(\d+)\s+PASS/g)];
+  if (selfTests.length === 0) {
+    warnings.push(`${file}: 未找到 SELF-TEST 声明，跳过测试数比对`);
+  } else if (actualTests !== null) {
+    for (const [, passed, total] of selfTests) {
+      if (Number(passed) !== actualTests || Number(total) !== actualTests) {
+        errors.push(
+          `${file}: SELF-TEST 写 ${passed}/${total}，实际 ${actualTests} 个测试`
+        );
+      }
+    }
+  }
+
+  // 这张卡的版式与官网首页不同：导出数是「57 EXPORTS」一段文字，
+  // 测试数在右下角的读数区 <span>TESTS</span> ... <em>114</em>。
+  const exportsMatch = text.match(/(\d+)\s+EXPORTS/);
+  if (!exportsMatch) {
+    warnings.push(`${file}: 未找到 EXPORTS 数量，跳过导出数比对`);
+  } else if (actualExports !== null && Number(exportsMatch[1]) !== actualExports) {
+    errors.push(
+      `${file}: EXPORTS 写 ${exportsMatch[1]}，实际 ${actualExports} —— ` +
+        `新增公开导出后预览卡容易漏改`
+    );
+  }
+
+  const testsRow = text.match(/<span>TESTS<\/span>[\s\S]*?<em>(\d+)<\/em>/);
+  if (!testsRow) {
+    warnings.push(`${file}: 未找到 TESTS 读数，跳过比对`);
+  } else if (actualTests !== null && Number(testsRow[1]) !== actualTests) {
+    errors.push(
+      `${file}: TESTS 读数写 ${testsRow[1]}，实际 ${actualTests} 个测试`
+    );
+  }
+}
+
 /* ------------ 10. 官网页面的相对链接在 Pages 部署布局下可达 */
 
 {
