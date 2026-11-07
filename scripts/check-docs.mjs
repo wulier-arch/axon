@@ -315,7 +315,11 @@ let actualExports = null;
 /* ------------------------------------------------------- 8. npm 包体积上限 */
 
 {
-  const MAX_FILES = 30;
+  // 2026-11-07 实测 `npm pack --dry-run --json`：31 个文件，逐条核对均为有意发布内容
+  // （根目录 3：LICENSE / README.md / package.json；benchmark 1；docs 4；examples 9；src 14）。
+  // 旧上限 30 是新增梯度校验文档与示例前定的，会稳定误报；这里同步到实测值并留 1 个余量，
+  // 仍能拦住误加入的构建产物、日志或本地配置。
+  const MAX_FILES = 32;
   const MAX_KB = 200;
 
   // 试一次默认配置；失败则换独立缓存目录重试。
