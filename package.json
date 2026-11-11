@@ -22,7 +22,8 @@
     "check:docs": "node scripts/check-docs.mjs",
     "benchmark": "node benchmark/run.js",
     "example:autograd": "node examples/autograd.mjs",
-    "example:spiral": "node examples/train-spiral.mjs"
+    "example:spiral": "node examples/train-spiral.mjs",
+    "benchmark:width": "node benchmark/width-sweep.mjs"
   },
   "keywords": [
     "neural-network",
